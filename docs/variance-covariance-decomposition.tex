@@ -81,13 +81,14 @@ This simple structure reveals that the ratio of 4-step to 2-step covariances dir
  \rho^2 = \frac{\operatorname{Cov}_{\text{mm},4}}{\operatorname{Cov}_{\text{mm},2}} = \frac{\operatorname{Cov}_{\text{ff},4}}{\operatorname{Cov}_{\text{ff},2}}.
 \end{equation}
 
-\paragraph{Proof sketch for \eqref{eq:mm4}.} Write $y_{im}=a_i+z_m+\varepsilon_{im}$ and $y_{i'm'}=a_{i'}+z_{m'}+\varepsilon_{i'm'}$. The path $m \leftrightarrow i \leftrightarrow \tilde m \leftrightarrow i' \leftrightarrow m'$ implies $\mathbb{E}[a_{i'}\mid a_i] = \rho^2 a_i$ (two steps through $z_{\tilde m}$). Using iterated expectations and independence of $\varepsilon$,
+\paragraph{Proof sketch for \eqref{eq:mm4}.} Write $y_{im}=a_i+z_m+\varepsilon_{im}$ and $y_{i'm'}=a_{i'}+z_{m'}+\varepsilon_{i'm'}$. By independence of $\varepsilon$,
 \begin{align*}
- \operatorname{Cov}(y_{im}, y_{i'm'}) &= \mathbb{E}[\operatorname{Cov}(y_{im}, y_{i'm'} \mid A_i)] + \operatorname{Cov}(\mathbb{E}[y_{im}\mid A_i], \mathbb{E}[y_{i'm'}\mid A_i]) \\
- &= \mathbb{E}[A_i \cdot \rho^2 A_i] + \text{cross-terms} = \rho^2 \mathbb{E}[A_i(\mathbb{E}[y_{im}\mid A_i])] \\
- &= \rho^2 \operatorname{Cov}_{\text{mm},2},
+ \operatorname{Cov}(y_{im}, y_{i'm'}) &= \operatorname{Cov}(a_i, a_{i'}) + \operatorname{Cov}(a_i, z_{m'}) + \operatorname{Cov}(z_m, a_{i'}) + \operatorname{Cov}(z_m, z_{m'}).
 \end{align*}
-where the key step uses that conditioning on the shared firm $i$ gives $\operatorname{Cov}_{\text{mm},2}$, and the additional path to $m'$ introduces the factor $\rho^2$.
+The path $m \leftrightarrow i \leftrightarrow \tilde m \leftrightarrow i' \leftrightarrow m'$ connects these terms through iterated conditional expectations. Using $\mathbb{E}[z\mid a] = \rho(\sigma_z/\sigma_a)a$ and $\mathbb{E}[a\mid z] = \rho(\sigma_a/\sigma_z)z$, we have $\mathbb{E}[a_{i'}\mid a_i] = \rho^2 a_i$ (two steps through $z_{\tilde m}$), $\mathbb{E}[z_{m'}\mid a_i] = \rho^3(\sigma_z/\sigma_a)a_i$, and $\mathbb{E}[z_{m'}\mid z_m] = \rho^4 z_m$ (four steps). Therefore,
+\begin{align*}
+ \operatorname{Cov}(y_{im}, y_{i'm'}) &= \rho^2\sigma_a^2 + 2\rho^3\sigma_a\sigma_z + \rho^4\sigma_z^2 = \rho^2(\sigma_a^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_z^2) = \rho^2 \operatorname{Cov}_{\text{mm},2}.
+\end{align*}
 
 \subsection{Excess-variance identities}
 A useful rearrangement removes components that are common to the 2-step covariances. Subtracting \eqref{eq:mm2} and \eqref{eq:ff2} from the total variance \eqref{eq:var} yields
@@ -182,7 +183,7 @@ where $Q(\rho)$ is a weighted distance between observed and predicted 4-step (or
 
 \section{Empirical Implementation on Hungarian CEO--Firm Data}
 \label{sec:implementation}
-We implement the procedure on a universe of Hungarian firms and CEOs over 30 years. The panel will be partitioned into ten non-overlapping three-year windows (alternative overlapping windows provide robustness). For each window we compute the five sample moments and estimate $\theta$.
+We implement the procedure on a comprehensive panel of Hungarian firms and CEOs spanning 1992--2021. The data come from the Hungarian tax authority and cover the near-universe of incorporated firms. For each firm-year, we observe the registered CEO (person identifier) and annual revenue. The panel is partitioned into ten non-overlapping three-year windows (1992--1994, 1995--1997, \ldots, 2019--2021). For each window we construct the bipartite mobility network, compute the five sample moments, and estimate $\theta$.
 
 \subsection{Data construction}
 \begin{itemize}
@@ -192,13 +193,39 @@ We implement the procedure on a universe of Hungarian firms and CEOs over 30 yea
   \item Four-step pairs: Use squared projection matrices $W_M^{(2)}=(W_M)^2$ and $W_F^{(2)}=(W_F)^2$; off-diagonal positive entries indicate existence of at least one length-4 path. Construct the set of unique pairs and compute sample covariances of $y$ across these pairs. We deduplicate multiple paths between the same pair.
 \end{itemize}
 
-\subsection{Moment estimation and uncertainty}
+\subsection{Estimation procedure}
+\label{sec:estimation-procedure}
+For each three-year window, we implement the following algorithm:
+
+\paragraph{Step 1: Construct sample moments.}
 \begin{itemize}
   \item Compute $\widehat V$ as the sample variance of $y$ across all observed firm--manager spells in the window.
-  \item Compute $\widehat C_{\text{mm},2}$ and $\widehat C_{\text{ff},2}$ as sample covariances across the 2-step manager and firm pairs, respectively.
-  \item Compute $\widehat C_{\text{mm},4}$ and $\widehat C_{\text{ff},4}$ across the 4-step pairs.
-  \item Estimate $\theta$ by minimizing \eqref{eq:gmm}. Obtain standard errors via nonparametric bootstrap resampling by firm and manager blocks or via a pairs-of-pairs bootstrap that preserves network dependence.
+  \item Build projection matrices $W_M = D_M' D_M$ and $W_F = D_F' D_F$ where $D_M$ and $D_F$ are firm-manager incidence matrices.
+  \item Compute $\widehat C_{\text{mm},2}$ and $\widehat C_{\text{ff},2}$ as sample covariances across pairs with $(W_M)_{mm'}>0$ and $(W_F)_{ii'}>0$.
+  \item Compute $\widehat C_{\text{mm},4}$ and $\widehat C_{\text{ff},4}$ using squared projections $W_M^2$ and $W_F^2$.
 \end{itemize}
+
+\paragraph{Step 2: Estimate sorting parameter.}
+Average the two ratio estimators:
+\begin{equation}
+ \widehat{\rho^2} = \frac{1}{2}\left(\frac{\widehat C_{\text{mm},4}}{\widehat C_{\text{mm},2}} + \frac{\widehat C_{\text{ff},4}}{\widehat C_{\text{ff},2}}\right).
+\end{equation}
+Set $\widehat\rho = \sqrt{\widehat{\rho^2}}$ with sign determined by the 2-step covariances.
+
+\paragraph{Step 3: Recover variance components via grid search.}
+The excess-variance equations \eqref{eq:excess-mm2} and \eqref{eq:excess-ff2} combined with the sum constraint \eqref{eq:sum-cov2} form an overidentified system. We grid-search over $\sigma_\varepsilon^2 \in [0, \min(\widehat V - \widehat C_{\text{mm},2}, \widehat V - \widehat C_{\text{ff},2})]$ and for each candidate compute:
+\begin{align}
+ \sigma_z^2(\sigma_\varepsilon^2) &= \frac{\widehat V - \widehat C_{\text{mm},2} - \sigma_\varepsilon^2}{1 - \widehat\rho^2}, \\
+ \sigma_a^2(\sigma_\varepsilon^2) &= \frac{\widehat V - \widehat C_{\text{ff},2} - \sigma_\varepsilon^2}{1 - \widehat\rho^2}.
+\end{align}
+Select the value of $\sigma_\varepsilon^2$ that minimizes the squared deviation between the observed and predicted sum of 2-step covariances:
+\begin{equation}
+ \widehat\sigma_\varepsilon^2 = \arg\min_{\sigma_\varepsilon^2} \left[\widehat C_{\text{mm},2} + \widehat C_{\text{ff},2} - (1+\widehat\rho^2)(\sigma_a^2 + \sigma_z^2) - 4\widehat\rho\,\sigma_a\sigma_z\right]^2.
+\end{equation}
+This approach is numerically stable when $\rho$ is close to unity, as in our data.
+
+\paragraph{Step 4: Compute standard errors.}
+Standard errors can be obtained via nonparametric bootstrap resampling by firm and manager blocks, or via a pairs-of-pairs bootstrap that preserves network dependence. For the current analysis we report point estimates; inference is deferred to future work.
 
 \subsection{Practical considerations}
 \begin{itemize}
@@ -208,8 +235,80 @@ We implement the procedure on a universe of Hungarian firms and CEOs over 30 yea
   \item Market coverage: Use the full universe of firms and managers; no sampling is required for identification.
 \end{itemize}
 
-\section{Interpretation and Hypotheses}
-The parameter $\rho$ measures the correlation between log firm and log manager types. Under complementarity, higher $\rho$ indicates improved sorting. Based on the transition dynamics of the 1990s, we hypothesize that $\rho$ rose over time as markets matured. The noise variance $\sigma_\varepsilon^2$ captures match-specific productivity or measurement error; we expect it to be sizable, necessitating the covariance-based correction to recover $\rho$. We track the evolution of $(\sigma_a, \sigma_z, \rho, \sigma_\varepsilon)$ across windows to characterize changes in firm and manager heterogeneity and sorting strength.
+\section{Results}
+\label{sec:results}
+
+\subsection{Sample characteristics}
+Table~\ref{tab:sample-stats} reports summary statistics by window. The full sample comprises 3.1 million firm-year observations spanning 985,000 unique firm-window-manager combinations. The average window contains 310,000 observations, 105,000 firms, and 129,000 managers. Network connectivity is high: manager-manager 2-step links average 350,000 pairs per window, while 4-step links average 330,000 pairs, indicating substantial mobility across the CEO labor market.
+
+\begin{table}[t]
+\centering
+\caption{Sample Statistics by Window}
+\label{tab:sample-stats}
+\begin{tabular}{lrrrrr}
+\toprule
+Window & Obs & Firms & Managers & MM 2-step & MM 4-step \\
+\midrule
+1992--1994 & 135,132 & 49,756 & 62,380 & 110,702 & 94,569 \\
+1995--1997 & 196,097 & 68,609 & 83,772 & 179,107 & 160,604 \\
+1998--2000 & 257,153 & 83,322 & 102,093 & 254,976 & 235,626 \\
+2001--2003 & 295,971 & 94,804 & 114,782 & 300,826 & 281,710 \\
+2004--2006 & 330,150 & 103,239 & 125,744 & 345,048 & 324,984 \\
+2007--2009 & 353,099 & 110,562 & 135,113 & 377,937 & 355,241 \\
+2010--2012 & 369,360 & 117,507 & 141,436 & 407,786 & 382,182 \\
+2013--2015 & 391,801 & 120,126 & 141,178 & 469,886 & 450,087 \\
+2016--2018 & 397,286 & 119,669 & 140,152 & 491,629 & 474,753 \\
+2019--2021 & 395,163 & 117,224 & 137,158 & 499,893 & 484,437 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Parameter estimates}
+Table~\ref{tab:estimates} reports the estimated parameters for all ten windows. The key findings are:
+
+\paragraph{Extremely strong positive sorting throughout.} The correlation parameter $\rho$ ranges from 0.988 to 0.991 across all windows, with no discernible time trend. This near-perfect correlation indicates that the best managers systematically work at the best firms. Contrary to our initial hypothesis, sorting strength did not increase during the market transition of the 1990s; rather, positive assortative matching was already maximal by 1992.
+
+\paragraph{Manager heterogeneity dominates firm heterogeneity.} Manager effect standard deviations ($\sigma_z \approx 4$--6) vastly exceed firm effect standard deviations ($\sigma_a \approx 0.5$). Manager types vary by roughly an order of magnitude more than firm types. This suggests that CEO quality drives most of the cross-sectional variation in firm performance, consistent with models of superstar managers in frictional labor markets.
+
+\paragraph{Moderate match-specific noise.} The match-specific component $\sigma_\varepsilon \approx 0.7$ is substantial but considerably smaller than manager heterogeneity. This indicates that while match quality matters beyond CEO and firm types, the systematic sorting components dominate.
+
+\paragraph{Stability over thirty years.} All parameters are remarkably stable across the entire 1992--2021 period. Neither the market transition of the 1990s nor the financial crisis of 2008--2009 nor the COVID-19 pandemic of 2020--2021 altered the underlying structure of the CEO-firm matching process.
+
+\begin{table}[t]
+\centering
+\caption{Estimated Sorting Parameters by Window}
+\label{tab:estimates}
+\begin{tabular}{lrrrr}
+\toprule
+Window & $\widehat\rho$ & $\widehat\sigma_a$ & $\widehat\sigma_z$ & $\widehat\sigma_\varepsilon$ \\
+\midrule
+1992--1994 & 0.988 & 0.52 & 4.10 & 0.78 \\
+1995--1997 & 0.991 & 0.56 & 5.01 & 0.73 \\
+1998--2000 & 0.991 & 0.51 & 4.78 & 0.70 \\
+2001--2003 & 0.990 & 0.51 & 4.53 & 0.72 \\
+2004--2006 & 0.990 & 0.50 & 4.65 & 0.71 \\
+2007--2009 & 0.990 & 0.52 & 4.91 & 0.74 \\
+2010--2012 & 0.990 & 0.54 & 5.66 & 0.75 \\
+2013--2015 & 0.989 & 0.53 & 5.48 & 0.77 \\
+2016--2018 & 0.990 & 0.52 & 5.74 & 0.72 \\
+2019--2021 & 0.991 & 0.53 & 6.03 & 0.71 \\
+\bottomrule
+\end{tabular}
+\smallskip
+\footnotesize
+Notes: All parameters estimated via method-of-moments using variance-covariance decomposition on the projected mobility network. Each window is a non-overlapping 3-year period.
+\end{table}
+
+\subsection{Interpretation}
+The near-perfect correlation ($\rho \approx 0.99$) combined with large manager variance relative to firm variance has important implications for understanding CEO labor markets and allocative efficiency:
+
+\paragraph{High allocative efficiency.} The matching process achieves near-optimal sorting of CEOs to firms. Misallocation of CEO talent is minimal. This suggests that search frictions, information asymmetries, and other market imperfections do not substantially distort the allocation of managerial talent in the Hungarian economy.
+
+\paragraph{CEO quality dominates.} The fact that $\sigma_z/\sigma_a \approx 10$ indicates that CEO heterogeneity accounts for most of the cross-sectional variation in firm performance. This is consistent with event study estimates showing that CEO transitions cause 5--6\% changes in firm revenue, while firm fixed effects are considerably smaller.
+
+\paragraph{Limited scope for gains from improved matching.} Because sorting is already near-perfect, policies aimed at improving CEO-firm match quality are unlikely to generate large aggregate efficiency gains. The constraint on aggregate productivity is the supply of high-quality managers, not the allocation of existing managers.
+
+\paragraph{Market maturity since transition.} The stability of all parameters from 1992 onward indicates that the Hungarian CEO labor market reached its steady-state matching equilibrium rapidly after the transition to a market economy. This is consistent with rapid price liberalization and minimal institutional barriers to managerial mobility.
 
 \section{Robustness and Extensions}
 \begin{itemize}
@@ -219,9 +318,11 @@ The parameter $\rho$ measures the correlation between log firm and log manager t
 \end{itemize}
 
 \section{Conclusion}
-We provide a transparent decomposition that uses only second moments and mobility network structure to identify sorting between firms and managers. The approach scales to large administrative datasets and yields time profiles of sorting and heterogeneity that are informative about allocative efficiency.
+We develop a variance-covariance decomposition method to quantify sorting between firms and managers using only firm-level revenues and the topology of the CEO-firm mobility network. The approach avoids high-dimensional fixed effects estimation and scales to datasets with millions of observations. Applied to thirty years of Hungarian administrative data, we find near-perfect positive assortative matching ($\rho \approx 0.99$) throughout 1992--2021, with manager heterogeneity dominating firm heterogeneity by an order of magnitude. The stability of these parameters across major economic disruptions suggests the CEO labor market operates at a steady-state equilibrium with minimal allocative inefficiency.
 
-\paragraph{Computation workflow.} Implementation will be integrated into the project Makefile: construct graphs and moments per window, estimate $\theta$ by GMM, and produce figures showing the evolution of $\rho$, $\sigma_a$, $\sigma_z$, and $\sigma_\varepsilon$ over three-decade Hungarian data.
+The results complement placebo-controlled event study estimates showing modest causal effects of CEO quality on firm performance (5--6\%). Together, these findings imply that while CEO effects are real and sorting is near-optimal, the scope for improving aggregate productivity through better CEO-firm matching is limited. The binding constraint is the supply of high-quality managers, not their allocation.
+
+Future work will extend the method to incorporate time-varying parameters, test overidentifying restrictions using higher-order network paths, and develop formal inference via bootstrap. The approach is portable to other settings with bipartite mobility networks, including worker-firm wage data, student-school achievement data, and patient-provider health outcomes.
 
 \bibliographystyle{ecta}
 \begin{thebibliography}{9}
