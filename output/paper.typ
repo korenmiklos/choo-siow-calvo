@@ -91,6 +91,111 @@ The structural parameters are estimated using simulated method of moments:
 
 The estimator exploits the insight that under random dissolution, dissolved matches form a representative sample of the steady-state distribution, while new matches reveal the equilibrium assignment rule.
 
+= Variance-Covariance Decomposition for Sorting Measurement
+
+== Model and Assumptions
+
+We study log revenue at the firm-manager match level within short, non-overlapping windows (e.g., three-year windows). For a match between firm i and manager m, we posit
+
+$ y_(i m) = A_i + Z_m + epsilon_(i m) $
+
+where $A_i$ is a firm effect, $Z_m$ is a manager effect, and $epsilon_(i m)$ is a match-specific disturbance. The key primitives are
+
+- $"Var"(A) = sigma_a^2$, $"Var"(Z) = sigma_z^2$, $"Cov"(A, Z) = rho sigma_a sigma_z$
+- Linear conditional expectations (e.g., under joint normality):
+
+$ E[Z | A] = (rho sigma_z / sigma_a) A, quad E[A | Z] = (rho sigma_a / sigma_z) Z $
+
+- $epsilon$ is mean-zero, independent across matches, and independent of $(A, Z)$ with $"Var"(epsilon) = sigma_epsilon^2$
+
+Parameters of interest are $theta = (sigma_a, sigma_z, rho, sigma_epsilon)$.
+
+== Network Moments
+
+We represent the data in a window as a bipartite graph between firms and managers. Projecting onto managers (firms) connects two managers (firms) if they have worked at the same firm (manager) in the window. Paths of even length in these projections encode higher-order co-employment.
+
+=== Cross-sectional variance
+
+Unconditionally across matches,
+
+$ V = "Var"(y) = sigma_a^2 + sigma_z^2 + 2 rho sigma_a sigma_z + sigma_epsilon^2 $
+
+=== Two-step covariances (direct neighbors)
+
+For two managers $m, m'$ who worked at the same firm $i$ (manager-manager link at distance 2):
+
+$ "Cov"(y_(i m), y_(i m')) = sigma_a^2 + 2 rho sigma_a sigma_z + rho^2 sigma_z^2 $
+
+For two firms $i, i'$ run by the same manager $m$ (firm-firm link at distance 2):
+
+$ "Cov"(y_(i m), y_(i' m)) = sigma_z^2 + 2 rho sigma_a sigma_z + rho^2 sigma_a^2 $
+
+Intuition: the shared side enters with full variance, while the opposite side is projected through $rho$ and enters with dampening $rho^2$.
+
+=== Four-step covariances (second neighbors)
+
+For manager pairs connected by a length-4 path in the manager projection:
+
+$ "Cov"(y_(i m), y_(i' m')) = rho^2 sigma_a^2 + 2 rho^3 sigma_a sigma_z + rho^4 sigma_z^2 $
+
+For firm pairs connected by a length-4 path in the firm projection:
+
+$ "Cov"(y_(i m), y_(i' m')) = rho^2 sigma_z^2 + 2 rho^3 sigma_a sigma_z + rho^4 sigma_a^2 $
+
+These follow from iterated projections: along a length-4 path, same-side components dampen with $rho^4$, cross-terms with $rho^3$, and opposite-side components with $rho^2$.
+
+=== Excess-variance identities
+
+Subtracting two-step covariances from the total variance isolates combinations of same-side variance and noise:
+
+$ V - "Cov"_(\"mm\",2) = (1 - rho^2) sigma_z^2 + sigma_epsilon^2 $
+
+$ V - "Cov"_(ff,2) = (1 - rho^2) sigma_a^2 + sigma_epsilon^2 $
+
+== Identification and Estimation
+
+Let the five model-implied moments be
+
+$ V(theta) = sigma_a^2 + sigma_z^2 + 2 rho sigma_a sigma_z + sigma_epsilon^2 $
+
+$ C_(mm,2)(theta) = sigma_a^2 + 2 rho sigma_a sigma_z + rho^2 sigma_z^2 $
+
+$ C_(ff,2)(theta) = sigma_z^2 + 2 rho sigma_a sigma_z + rho^2 sigma_a^2 $
+
+$ C_(mm,4)(theta) = rho^2 sigma_a^2 + 2 rho^3 sigma_a sigma_z + rho^4 sigma_z^2 $
+
+$ C_(ff,4)(theta) = rho^2 sigma_z^2 + 2 rho^3 sigma_a sigma_z + rho^4 sigma_a^2 $
+
+
+Given empirical counterparts $\hat V$, $\hat C_(mm,2)$, $\hat C_(ff,2)$, $\hat C_(mm,4)$, $\hat C_(ff,4)$ measured within a window, estimate $theta$ by minimizing a GMM/NLS objective:
+
+$ Q(theta) = (m(theta) - \hat m)' W (m(theta) - \hat m) $
+
+subject to $sigma_a \ge 0$, $sigma_z \ge 0$, $sigma_epsilon \ge 0$, and $|rho| \le 1$. Two-step covariances purge $sigma_epsilon^2$, while four-step covariances introduce nonlinearity in $rho$ (via $rho^3$, $rho^4$), enabling separate identification of $rho$ and the scale parameters. The total variance then identifies $sigma_epsilon^2$.
+
+== Implementation on 30 Years of Hungarian CEO-Firm Data
+
+We partition the 30-year panel into ten non-overlapping three-year windows (overlapping windows as robustness). For each window:
+
+- Construct bipartite incidence matrix $B$ with $B_(i m)=1$ if $m$ manages $i$ in the window
+- Manager projection: $W_M = B' B$ with diagonal set to zero; firm projection: $W_F = B B'$ with diagonal set to zero
+- Two-step pairs: manager pairs with $(W_M)_(m m') > 0$ and firm pairs with $(W_F)_(i i') > 0$
+- Four-step pairs: use $W_M^2$ and $W_F^2$; positive off-diagonal entries indicate at least one length-4 path
+- Compute sample variance $\hat V$ across all spells and sample covariances across the 2-step and 4-step pairs
+- Estimate $theta$ via \#(Q(theta)) with identity $W$ (NLS) and report bootstrap standard errors (pairs-of-pairs bootstrap to account for network dependence)
+
+Practical considerations:
+
+- Window length balances stationarity and data sufficiency
+- Handle concurrent co-management by separate spells or aggregation; assess sensitivity
+- Winsorize extreme revenues to stabilize variance and covariance estimates
+
+== Interpretation and Hypotheses
+
+We track $(sigma_a, sigma_z, rho, sigma_epsilon)$ across windows. Under complementarities, higher $rho$ indicates tighter sorting and improved allocation. We hypothesize that $rho$ increased over time as post-transition markets matured. The match disturbance $sigma_epsilon^2$ is expected to be sizable; covariance-based moments correct for its contamination of variance-based measures. Scale parameters $sigma_a$ and $sigma_z$ may be more stable than $rho$.
+
+#pagebreak()
+
 = Simulation Results
 
 == Baseline Calibration

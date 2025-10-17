@@ -255,7 +255,22 @@ Results integrate with the broader project workflow:
 - **Input data** from `input/` folder managed by `bead`
 - **Simulation code** in `code/simulate/` subfolder
 - **Estimation routines** in `code/estimate/` subfolder  
-- **Final outputs** to `output/` folder for inclusion in papers
+- **Final outputs** to `output/` folder for computational results
+- **Research papers** in `papers/` subfolder with separate folders per paper
 - **Temporary files** (large simulation datasets) in `temp/`
+
+## Papers
+
+### Random Effects Identification Paper (`papers/random-effects/`)
+
+**Status**: Active development  
+**Format**: LaTeX (PNAS submission format)  
+**Target**: PNAS or similar high-impact journal (≤12 citations)
+
+**Main Contribution**: Novel identification strategy for random effects models using variance-covariance decomposition across mobility network paths. The key insight is that 4-step covariances equal ρ² times 2-step covariances, enabling direct identification of the sorting parameter via simple ratios.
+
+**Empirical Application**: Hungarian manufacturing data (1985-2018) showing very strong CEO-firm sorting (ρ ≈ 0.89-0.96), with firm effects dominating manager effects (σ_a/σ_z ≈ 10).
+
+**Compilation**: Run `make paper` from project root. Requires pdflatex and bibtex.
 
 This framework provides a comprehensive platform for studying manager-firm matching with realistic frictions, enabling both theoretical insights and robust empirical estimation using modern computational methods.

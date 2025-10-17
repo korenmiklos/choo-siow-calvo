@@ -52,6 +52,9 @@ MANIFEST
 *.toc
 *.lot
 *.lof
+*.out
+*.nav
+*.snm
 
 # System files
 .DS_Store

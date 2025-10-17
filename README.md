@@ -33,13 +33,15 @@ This project develops an agent-based simulation and structural estimation framew
 │   ├── estimate/      # Structural estimation routines
 │   ├── create/        # Data creation and manipulation
 │   └── plot/          # Visualization and reporting
-├── docs/              # Research documentation
+├── docs/              # Research documentation and notes
 │   ├── choo-siow-framework-notes.md
 │   ├── steady-state-switching-dynamics.md
 │   └── empirical-identification-switching.md
+├── papers/            # Research papers
+│   └── random-effects/  # Random effects identification paper
+│       └── paper.tex    # LaTeX source (PNAS format)
 ├── input/             # External datasets (managed by bead)
-├── output/            # Final results and reports
-│   └── paper.pdf      # Main research paper
+├── output/            # Final computational results
 ├── temp/              # Temporary computation files
 └── Makefile           # Workflow automation
 ```
@@ -51,7 +53,7 @@ This project develops an agent-based simulation and structural estimation framew
 - **Make**: Workflow automation (all targets runnable from root)
 - **Bead**: Data dependency management (`bead input load <name>`)
 - **Git**: Version control with appropriate .gitignore
-- **Typst**: Modern document compilation for papers and reports
+- **LaTeX**: TeX Live 2024 with pdflatex and bibtex for paper compilation
 
 ### Optional Tools (for future implementation)
 
@@ -94,7 +96,8 @@ bead input update <name>  # Update existing datasets
 ### Completed Components
 
 - [x] Theoretical framework documentation
-- [x] Paper outline and structure (Typst format)
+- [x] Random effects identification paper (LaTeX, PNAS format)
+- [x] Variance-covariance decomposition methodology
 - [x] Project organization and workflow automation
 - [x] Git repository with proper .gitignore
 - [x] Makefile with complete workflow targets

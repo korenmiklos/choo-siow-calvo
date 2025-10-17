@@ -25,26 +25,30 @@ estimate: simulate
 	@echo "Estimation module not yet implemented - this is a research framework."
 	@touch temp/estimation_results.csv
 
-# Compile paper
-paper: output/paper.pdf
+# Compile papers
+paper: papers/random-effects/paper.pdf
 
 # Alias for clarity
-paper-typst: paper
+paper-latex: paper
 
-# Watch Typst file and recompile on changes (requires Typst 0.11+)
+# Watch LaTeX file and recompile on changes
 paper-watch:
-	@echo "Watching Typst sources..."
-	typst watch output/paper.typ output/paper.pdf
+	@echo "Watching LaTeX sources..."
+	@while true; do \
+		inotifywait -e modify papers/random-effects/paper.tex 2>/dev/null || sleep 2; \
+		make paper; \
+	done
 
-output/paper.pdf: output/paper.typ
-	@echo "Compiling paper to PDF..."
-	typst compile output/paper.typ output/paper.pdf
+papers/random-effects/paper.pdf: papers/random-effects/paper.tex
+	@echo "Compiling LaTeX paper to PDF..."
+	cd papers/random-effects && pdflatex -interaction=nonstopmode paper.tex
+	cd papers/random-effects && pdflatex -interaction=nonstopmode paper.tex
 	@echo "Paper compiled successfully."
 
 # Clean temporary files
 clean:
 	@echo "Cleaning temporary files..."
-	rm -f output/paper.pdf
+	rm -f papers/random-effects/paper.pdf papers/random-effects/*.aux papers/random-effects/*.log papers/random-effects/*.bbl papers/random-effects/*.blg papers/random-effects/*.out
 	rm -rf temp/*
 	@echo "Clean complete."
 
@@ -58,7 +62,7 @@ help:
 	@echo "  setup     - Create project directory structure"
 	@echo "  simulate  - Run agent-based simulation (placeholder)"
 	@echo "  estimate  - Run structural estimation (placeholder)"
-	@echo "  paper     - Compile paper to PDF using Typst"
+	@echo "  paper     - Compile papers/random-effects/paper.tex to PDF using pdflatex"
 	@echo "  clean     - Remove temporary files"
 	@echo "  help      - Show this help"
 	@echo ""

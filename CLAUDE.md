@@ -12,8 +12,8 @@ make all       # Complete workflow: setup + simulate + estimate + paper
 make setup     # Create directory structure
 make simulate  # Agent-based simulation (placeholder)
 make estimate  # Structural estimation (placeholder) 
-make paper     # Compile paper.typ to PDF using Typst
-make clean     # Remove temporary files
+make paper     # Compile papers/random-effects/paper.tex to PDF using pdflatex
+make clean     # Remove temporary and LaTeX auxiliary files
 make help      # Show available targets
 ```
 
@@ -32,9 +32,12 @@ bead input update <name>  # Update existing datasets
 │   ├── estimate/    # Structural estimation routines
 │   ├── create/      # Data creation and manipulation
 │   └── plot/        # Visualization and reporting
-├── docs/            # Research documentation (8 files)
+├── docs/            # Research notes and documentation
+├── papers/          # Research papers
+│   └── random-effects/  # Random effects identification paper (LaTeX)
+│       └── paper.tex    # PNAS format, ≤12 citations
 ├── input/           # External datasets (bead-managed, gitignored)
-├── output/          # Final results (paper.pdf, paper.typ)
+├── output/          # Final computational results
 ├── temp/            # Temporary files (gitignored)
 ├── .bead-meta/      # Bead metadata
 ├── Makefile         # Complete workflow automation
@@ -44,7 +47,7 @@ bead input update <name>  # Update existing datasets
 
 ## Key Technologies
 
-- **Typst**: Document compilation (paper.typ → paper.pdf)
+- **LaTeX**: Document compilation (pdflatex + bibtex, TeX Live 2024)
 - **Bead**: Data dependency management  
 - **Make**: Workflow automation from root directory
 - **Git**: Version control with korenmiklos/choo-siow-calvo
@@ -63,20 +66,27 @@ bead input update <name>  # Update existing datasets
 μ(a,z) = exp(az/σ) / [Φ(a)φ(z)]
 ```
 
-### Identification Strategy
-Four moments from mobility patterns:
-1. Noise variance: Var(Δln Y | no switch) = 2σ²ᵤ
-2. Firm heterogeneity: Var(Δln Y | firm switch) - 2σ²ᵤ = 2σ²ₐ(1-ρ²)  
-3. Manager heterogeneity: Var(Δln Y | manager switch) - 2σ²ᵤ = 2σ²ᵢ(1-ρ²)
-4. Sorting correlation: Cov(ln Y_before, ln Y_after | switch) = (σₐ + ρσᵢ)²
+### Identification Strategy (Random Effects Paper)
+Five moments from mobility network covariances (y = a + z + ε):
+1. Total variance: V = σ²_a + σ²_z + 2ρσ_aσ_z + σ²_ε
+2. Manager-manager 2-step covariance: C_mm,2 = σ²_a + 2ρσ_aσ_z + ρ²σ²_z
+3. Firm-firm 2-step covariance: C_ff,2 = σ²_z + 2ρσ_aσ_z + ρ²σ²_a
+4. Manager-manager 4-step covariance: C_mm,4 = ρ² · C_mm,2
+5. Firm-firm 4-step covariance: C_ff,4 = ρ² · C_ff,2
+
+**Key Insight**: 4-step covariances = ρ² × 2-step covariances (path attenuation)
+**Constructive Estimation**: ρ² = C_mm,4/C_mm,2 (direct identification via ratios)
 
 ## Implementation Status
 
 ### ✅ Completed
-- Theoretical framework and documentation (8 files in docs/)
-- Paper outline (output/paper.typ) with complete academic structure
+- Theoretical framework and documentation (docs/)
+- Random effects identification paper (papers/random-effects/paper.tex)
+  - Variance-covariance decomposition methodology
+  - Hungarian manufacturing data (1985-2018): ρ ≈ 0.89-0.96
+  - PNAS format with ≤12 citations
 - Project organization and Makefile workflow  
-- README.md with comprehensive documentation
+- README.md and AGENTS.md with comprehensive documentation
 - Git repository setup with proper .gitignore
 - GitHub repository: https://github.com/korenmiklos/choo-siow-calvo
 
@@ -91,6 +101,15 @@ Four moments from mobility patterns:
 - Project follows Social Science Data Editors standards
 - All scripts runnable from root with relative paths
 - Input/temp folders managed by bead and gitignored
-- Typst compilation tested and working
-- Repository structure ready for future Julia/Python implementation
+- LaTeX compilation tested and working (pdflatex -interaction=nonstopmode)
+- Repository structure supports multiple papers in papers/ subfolder
+- Papers use embedded bibliography (thebibliography environment, no .bib files)
 - Documentation covers both theory and computational implementation
+
+## Recent Changes (2025-10-17)
+
+- **Reorganized paper structure**: Moved variance-covariance paper from docs/ to papers/random-effects/
+- **Fixed critical bugs**: 4-step path construction and projection matrix swap (ρ: 0.99 → 0.89-0.96)
+- **Updated methodology**: Removed incorrect IV interpretation, added path attenuation explanation
+- **Improved Makefile**: Now compiles LaTeX papers with proper auxiliary file cleanup
+- **Updated documentation**: AGENTS.md, README.md, CLAUDE.md reflect new papers/ structure
