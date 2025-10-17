@@ -108,8 +108,24 @@ Five moments from mobility network covariances (y = a + z + ε):
 
 ## Recent Changes (2025-10-17)
 
+### Morning Session
 - **Reorganized paper structure**: Moved variance-covariance paper from docs/ to papers/random-effects/
 - **Fixed critical bugs**: 4-step path construction and projection matrix swap (ρ: 0.99 → 0.89-0.96)
 - **Updated methodology**: Removed incorrect IV interpretation, added path attenuation explanation
-- **Improved Makefile**: Now compiles LaTeX papers with proper auxiliary file cleanup
+- **Improved Makefile**: Compiles LaTeX papers with proper auxiliary file cleanup
 - **Updated documentation**: AGENTS.md, README.md, CLAUDE.md reflect new papers/ structure
+
+### Evening Session
+- **Downloaded PNAS LaTeX template**: Files in lib/pnas-template/ (pnas-new.cls, pnasresearcharticle.sty, etc.)
+- **Fixed .gitignore**: Removed lib/ from Python exclusions (template files should be version controlled)
+- **Adapted paper to PNAS format**: 
+  - Used pnas-new document class with pnasresearcharticle template
+  - Added significance statement (120 words)
+  - Reformatted to two-column layout with proper sections
+  - Compressed content to 4 pages (~3,500 words, 5 references, 3 tables)
+  - Fixed Unicode characters (≈ → $\approx$)
+- **Updated Makefile**: Uses TEXINPUTS to find PNAS template in lib/pnas-template/
+- **Documented PNAS guidelines**: Complete submission requirements in AGENTS.md
+  - Length: 6 pages preferred, 12 max (4,000 words, 50 refs, 4 figures standard)
+  - Required: abstract ≤250 words, significance ≤120 words
+  - Classifications, keywords, data availability statement

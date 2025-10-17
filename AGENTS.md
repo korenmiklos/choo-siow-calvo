@@ -265,12 +265,60 @@ Results integrate with the broader project workflow:
 
 **Status**: Active development  
 **Format**: LaTeX (PNAS submission format)  
-**Target**: PNAS or similar high-impact journal (≤12 citations)
+**Target**: PNAS or similar high-impact journal
 
 **Main Contribution**: Novel identification strategy for random effects models using variance-covariance decomposition across mobility network paths. The key insight is that 4-step covariances equal ρ² times 2-step covariances, enabling direct identification of the sorting parameter via simple ratios.
 
 **Empirical Application**: Hungarian manufacturing data (1985-2018) showing very strong CEO-firm sorting (ρ ≈ 0.89-0.96), with firm effects dominating manager effects (σ_a/σ_z ≈ 10).
 
-**Compilation**: Run `make paper` from project root. Requires pdflatex and bibtex.
+**Compilation**: Run `make paper` from project root. Uses PNAS LaTeX template from `lib/pnas-template/`.
+
+#### PNAS Submission Guidelines
+
+**Article Type**: Research Report (Direct Submission)
+- **Length**: Maximum 6 pages preferred, up to 12 pages allowed
+- **Standard 6-page article**: ~4,000 words, 50 references, 4 medium-size figures/tables
+- **Character limit**: 39,000 characters including spaces for text when submitting figures/tables
+
+**Required Components**:
+1. **Title**: Brief (<135 characters), descriptive, comprehensible to broad audience
+2. **Author line**: Full names with affiliations (department, institution, city, country)
+3. **Abstract**: ≤250 words, explains major contributions to general reader
+4. **Significance Statement**: ≤120 words, understandable to undergraduate-educated scientist outside field
+5. **Main text**: Introduction (no heading), Results, Discussion, Materials and Methods
+6. **References**: Full titles, MEDLINE abbreviations, numbered in order of appearance
+7. **Figure legends**: Brief overview + explicit description of each panel
+
+**Formatting Requirements**:
+- Use `pnas-new.cls` document class with `\templatetype{pnasresearcharticle}`
+- Two-column format, 9pt font
+- Line numbers optional (use `lineno` option)
+- Classification: Select major (Physical/Social/Biological Sciences) and minor category
+- Keywords: 3-5 keywords recommended
+- Figures: Small (9×6 cm), medium (11×11 cm), large (18×22 cm)
+- Text in figures: 6-12 points after reduction
+- Color mode: RGB
+- Resolution: 300 ppi (grayscale/color), 600-900 ppi (with text), 1000-1200 ppi (line art)
+
+**Style Guidelines**:
+- No statements of novelty or priority
+- Use SI units
+- Define field-specific abbreviations at first mention
+- Follow CSE Manual for Authors, Editors, and Publishers (8th edition)
+- Cite references in numerical order
+- No unpublished abstracts or "data not shown"
+- Full article titles in references
+
+**Supporting Information (SI)**:
+- Single PDF file with all SI content
+- Main text must stand alone without SI
+- Number SI figures/tables as S1, S2, etc.
+- SI references cited separately from main text
+- Methods: Sufficient detail in main text required; detailed methods can go in SI
+
+**Data Sharing**:
+- PNAS requires data archiving
+- Use public repositories (Figshare, Zenodo, GitHub, etc.)
+- Include data availability statement
 
 This framework provides a comprehensive platform for studying manager-firm matching with realistic frictions, enabling both theoretical insights and robust empirical estimation using modern computational methods.

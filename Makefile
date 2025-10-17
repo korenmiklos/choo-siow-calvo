@@ -39,10 +39,10 @@ paper-watch:
 		make paper; \
 	done
 
-papers/random-effects/paper.pdf: papers/random-effects/paper.tex
-	@echo "Compiling LaTeX paper to PDF..."
-	cd papers/random-effects && pdflatex -interaction=nonstopmode paper.tex
-	cd papers/random-effects && pdflatex -interaction=nonstopmode paper.tex
+papers/random-effects/paper.pdf: papers/random-effects/paper.tex lib/pnas-template/pnas-new.cls
+	@echo "Compiling PNAS LaTeX paper to PDF..."
+	cd papers/random-effects && TEXINPUTS=.:../../lib/pnas-template//:${TEXINPUTS} pdflatex -interaction=nonstopmode paper.tex
+	cd papers/random-effects && TEXINPUTS=.:../../lib/pnas-template//:${TEXINPUTS} pdflatex -interaction=nonstopmode paper.tex
 	@echo "Paper compiled successfully."
 
 # Clean temporary files
