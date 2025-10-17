@@ -96,6 +96,8 @@ This simple structure reveals that the ratio of 4-step to 2-step covariances dir
 Equations \eqref{eq:var}--\eqref{eq:ff4} provide five moment conditions for four parameters, yielding an overidentified system. The ratio structure \eqref{eq:rho-ratio} permits constructive estimation.
 
 \subsection*{Path attenuation interpretation}
+% TODO: Add TikZ figure showing firm-manager network with 2-step and 4-step paths
+% Visual explanation of covariance decay identification strategy with network hops
 The ratio measures how correlation decays with network distance. A 4-step path requires two additional "hops" through the matching process compared to a 2-step connection. Each hop introduces one factor of $\rho$, giving $\rho^2$ attenuation. Taking ratios cancels all variance and cross-product terms, isolating $\rho^2$.
 
 \subsection*{Sequential estimation procedure}
@@ -115,11 +117,19 @@ We grid-search over $\sigma_\varepsilon^2$ to minimize the squared deviation bet
 We implement the procedure on a comprehensive panel of Hungarian firms and CEOs spanning 1992--2021 from the Hungarian tax authority, covering the near-universe of incorporated firms. The panel is partitioned into ten non-overlapping three-year windows. For each window we construct the bipartite mobility network and compute sample moments.
 
 \subsection*{Data construction}
-The outcome $y_{im}$ is log real firm revenue aggregated over the window while manager $m$ is in office at firm $i$. We build firm and manager incidence matrices $D_F$ and $D_M$. The firm projection $P_F = D_F D_F'$ connects observations sharing a firm; the manager projection $P_M = D_M D_M'$ connects observations sharing a manager (diagonals set to zero). For 4-step covariances, we compute $P_F^2$ and $P_M^2$, then exclude all pairs with direct 2-step connections: use $\max(P_F^2 - \mathbb{1}_{P_F>0}, 0)$ for manager--manager 4-step paths.
+% TODO: Remove year fixed effects from log revenue before computing moments
+The outcome $y_{im}$ is log real firm revenue aggregated over the window while manager $m$ is in office at firm $i$. We build firm and manager incidence matrices $D_F$ and $D_M$. The firm projection $P_F = D_F D_F'$ connects observations sharing a firm; the manager projection $P_M = D_M D_M'$ connects observations sharing a manager (diagonals set to zero). 
+
+% NOTE: Critical fix needed - ensure 4-step paths exclude any pairs with shorter connections
+% Current method may include non-independent paths where managers share multiple firms
+For 4-step covariances, we compute $P_F^2$ and $P_M^2$, then exclude all pairs with direct 2-step connections: use $\max(P_F^2 - \mathbb{1}_{P_F>0}, 0)$ for manager--manager 4-step paths. This ensures we capture only the shortest walk of length 4 between manager pairs.
 
 \section*{Results}
 
 \subsection*{Sample characteristics}
+% TODO: Add network statistics table (giant component size, standard network summary statistics)
+% Consider starting analysis from 2004 (post-EU accession) for cleaner institutional environment
+% Pool all years after 2004 for initial cross-sectional demonstration
 Table~\ref{tab:sample-stats} reports summary statistics by window. The full sample comprises 7.8 million firm-year observations across 2.4 million unique firm-manager-window combinations. The sample grows from 280,000 observations in 1992--1994 to over 1 million in the 2010s. Network connectivity increases correspondingly: manager-manager 2-step links grow from 309,000 to 1.3 million, while pure 4-step links range from 180,000 to 890,000 pairs.
 
 \begin{table}[t]
@@ -147,6 +157,10 @@ Window & Obs & Firms & Managers & MM 2-step & MM 4-step \\
 \end{table}
 
 \subsection*{Model fit}
+% TODO: Test overidentifying restrictions more formally
+% Consider parameter restrictions (constant variances, only correlation changing)
+% Optional: Include 6-step, 8-step covariances as additional moments
+% Model prediction: h-step covariances = ρ^(h-2) × 2-step covariances
 Table~\ref{tab:fit} compares observed and model-implied moments for 1995--1997. The model fits the five sample moments closely. The 4-step covariances, which provide overidentifying restrictions, show 15--23\% deviations---acceptable for overidentification tests. This validates the linear random-effects decomposition.
 
 \begin{table}[t]
@@ -169,6 +183,9 @@ FF 4-step cov ($C_{\text{ff},4}$) & 2.000 & 2.455 & $+22.8$ \\
 \end{table}
 
 \subsection*{Parameter estimates}
+% NOTE: Expected believable range for correlation is 0.6-0.8 (max 0.8)
+% Current estimates of 0.89-0.96 may reflect bugs in 4-step path construction
+% After fixing: expect lower correlation in early 1990s transition, stabilization at higher level
 Table~\ref{tab:estimates} reports estimated parameters for all ten windows. The correlation parameter $\rho$ ranges from 0.89 to 0.96 across windows, with a clear upward trend from the early 1990s to the 2010s. This indicates very strong positive assortative matching throughout the sample period. The increase from 0.89 in 1992--1994 to 0.96 by 2013--2015 suggests matching efficiency improved substantially during the post-transition period.
 
 Firm effect standard deviations ($\sigma_a \approx 1.7$--4.0) substantially exceed manager effect standard deviations ($\sigma_z \approx 0.2$--0.3), indicating firm-specific factors account for most cross-sectional variation in revenues. The match-specific component $\sigma_\varepsilon \approx 0.7$--0.9 is substantial and stable. The 2016--2018 window shows $\rho = 0.999$ with implausibly large $\sigma_a = 19.9$, reflecting numerical instability when $\rho$ approaches unity; future work should implement regularization for such cases.
@@ -202,6 +219,14 @@ The strong positive sorting ($\rho \approx 0.89$--0.96) combined with firm heter
 
 Second, the dominance of firm heterogeneity suggests firm-specific characteristics---technology, capital, market position---account for most revenue variation. CEO quality matters primarily through interaction with firm type rather than independently. This complements event study evidence showing modest causal effects of CEO transitions.
 
+% NOTE: Need to cite maximum 12 references total (PNAS limit)
+% Required citations: 
+% - Worker-firm correlation studies (max 3-4): AKM, Andrews et al., [1-2 more]
+% - CEO literature (max 3-4): Strategic management/corp finance on CEO effects/R-squared
+% - Gregory Clark genetics paper (path-length approach)
+% - Own work with Orbán and Telegdy (event study ~20% R-squared, 5-6% causal effects)
+% - Misallocation: Hsieh-Klenow classical papers (max 3 total)
+% TODO: Comment on fixed-effects approaches overestimating R-squared due to bias
 Third, our estimates of very strong positive sorting ($\rho \approx 0.89$--0.96) contrast sharply with worker-firm matching literature, where correlations are typically weak or negative (1). Andrews et al.\ (2) find negative assortative matching in German data after correcting for limited mobility bias, with correlations around $-0.1$ to $-0.2$. The difference likely reflects fundamental distinctions between CEO and worker labor markets: CEOs are scarce, high-skill workers whose productivity exhibits strong complementarity with firm capital; the CEO matching process involves intensive search with substantial information revelation; and CEOs capture a large share of match surplus through compensation negotiations, incentivizing efficient sorting.
 
 \section*{Discussion}
@@ -210,7 +235,21 @@ We develop a variance-covariance decomposition method to quantify sorting betwee
 
 The results suggest a labor market model where: (1) firms vary substantially in revenue potential due to capital, technology, and market position; (2) CEO quality matters primarily through complementarity with firm characteristics; (3) the matching process efficiently allocates scarce CEO talent. The scope for improving aggregate productivity through better CEO-firm matching appears limited, as sorting is already near-optimal by the 2000s.
 
-The method is portable to other settings with bipartite mobility networks, including worker-firm wage data, student-school achievement data, and patient-provider health outcomes. Future work will extend the method to test overidentifying restrictions using higher-order network paths and develop formal inference via bootstrap.
+% TODO: Add counterfactual analysis - GDP contribution of increasing correlation
+% Method: Lognormal assumption gives closed-form calculation
+% Mean of lognormal depends on variance: exp[0.5 × variance] enters mean
+% Higher sorting increases variance and thereby mean output
+% Counterfactual: If correlation remained at early 1990s level, how much lower would gross output be today?
+% Generate headline number for abstract
+% Optional: Estimate model using log value added instead of revenue for direct GDP measurement
+
+The method is portable to other settings with bipartite mobility networks, including worker-firm wage data, student-school achievement data, and patient-provider health outcomes. 
+
+% Future extensions:
+% - Test overidentifying restrictions using higher-order network paths (6-step, 8-step)
+% - Apply to Germany and Austria data for cross-country comparison
+% - Develop formal inference via bootstrap
+Future work will extend the method to test overidentifying restrictions using higher-order network paths and develop formal inference via bootstrap.
 
 \matmethods{
 
@@ -226,6 +265,10 @@ For each three-year window, we implement the following steps:
 
 \subsection*{Data sources}
 
+% TODO: Specify data preprocessing steps:
+% - Remove year fixed effects from all log revenue observations
+% - Apply consistent demeaning to all variables
+% - Large sample size makes degrees of freedom corrections unnecessary
 Hungarian firm-CEO data come from the tax authority and cover 1992--2021. For each firm-year, we observe the registered CEO (person identifier) and annual revenue. We deflate nominal revenue using standard price indices. If a firm--manager relation spans multiple years within a window, we average log revenues.
 
 \subsection*{Data availability}
@@ -236,7 +279,7 @@ The Hungarian tax authority data used in this study are confidential and cannot 
 
 \showmatmethods{}
 
-\acknow{We thank Gregory Clark for useful discussions. This research was supported by the Hungarian National Research, Development and Innovation Office (grant K-135633).}
+\acknow{We thank Gregory Clark for useful discussions. Project no. 144193 has been implemented with the support provided by the Ministry of Culture and Innovation of Hungary from the National Research, Development and Innovation Fund, financed under the KKP\_22 funding scheme. This project was funded by the European Research Council (ERC Advanced Grant agreement number 101097789). Á.T. received support from the Hungarian Scientific Research Fund – OTKA, contract number 143346. The views expressed in this research are those of the authors and do not necessarily reflect the official view of the European Union or the European Research Council.}
 
 \showacknow{}
 
