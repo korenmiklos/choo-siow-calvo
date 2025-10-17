@@ -132,12 +132,19 @@ where Φ(a) and φ(z) are normalizing constants ensuring probabilities sum to un
 
 ### Identification Strategy
 
-Four key moments identify the structural parameters:
+Five moments from mobility network covariances identify four structural parameters (θ = σ_a, σ_z, ρ, σ_ε). Log revenue decomposes as y = a + z + ε where a is log firm effect and z is log manager effect:
 
-1. **Noise variance**: Var(Δln Y | no switch) = 2σ²ᵤ
-2. **Firm heterogeneity**: Var(Δln Y | firm switch) - 2σ²ᵤ = 2σ²ₐ(1-ρ²)
-3. **Manager heterogeneity**: Var(Δln Y | manager switch) - 2σ²ᵤ = 2σ²ᵢ(1-ρ²)
-4. **Sorting correlation**: Cov(ln Y_before, ln Y_after | switch) = (σₐ + ρσᵢ)²
+1. **Total variance**: V = σ²_a + σ²_z + 2ρσ_aσ_z + σ²_ε
+2. **Manager-manager 2-step covariance**: C_mm,2 = σ²_a + 2ρσ_aσ_z + ρ²σ²_z (same firm)
+3. **Firm-firm 2-step covariance**: C_ff,2 = σ²_z + 2ρσ_aσ_z + ρ²σ²_a (same manager)
+4. **Manager-manager 4-step covariance**: C_mm,4 = ρ² · C_mm,2 (second-degree connections)
+5. **Firm-firm 4-step covariance**: C_ff,4 = ρ² · C_ff,2 (second-degree connections)
+
+**Constructive Estimation**: The ratio C_mm,4/C_mm,2 = ρ² directly identifies the sorting parameter by measuring how correlation attenuates with network distance. Moving from 2-step to 4-step paths adds two "hops" through the matching process, each contributing factor ρ, yielding ρ² attenuation.
+
+**Sequential Steps**: (1) Estimate ρ² from covariance ratios, (2) solve for σ_a and σ_z using 2-step covariance differences, (3) recover σ_ε from total variance. All parameters have closed-form solutions.
+
+**Concentrated GMM Alternative**: For higher-order paths (6-step, 8-step) or efficiency gains, fix ρ and solve analytically for other parameters, then search over ρ ∈ [-1,1] to minimize distance between observed and predicted higher-order covariances.
 
 ### Policy Applications
 

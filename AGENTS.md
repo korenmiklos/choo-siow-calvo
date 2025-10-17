@@ -85,37 +85,58 @@ Iterative algorithm to compute steady-state equilibrium:
 
 ## Structural Estimation Framework
 
-### Moment Conditions
+### Moment Conditions from Mobility Networks
 
-The estimation exploits four key moments from switching patterns:
+The estimation exploits variance-covariance decomposition across manager-firm pairs at different path lengths in the projected mobility network. Log revenue decomposes as $y_{im} = a_i + z_m + \varepsilon_{im}$ where $a_i$ is log firm effect and $z_m$ is log manager effect:
 
-1. **Noise Variance**: $\text{Var}(\Delta\ln Y | \text{no switch}) = 2\sigma_u^2$
-2. **Firm Heterogeneity**: $\text{Var}(\Delta\ln Y | \text{firm switch}) - 2\sigma_u^2 = 2\sigma_a^2(1-\rho^2)$
-3. **Manager Heterogeneity**: $\text{Var}(\Delta\ln Y | \text{manager switch}) - 2\sigma_u^2 = 2\sigma_z^2(1-\rho^2)$
-4. **Sorting Correlation**: $\text{Cov}(\ln Y_{\text{before}}, \ln Y_{\text{after}} | \text{switch}) = (\sigma_a + \rho\sigma_z)^2$
+1. **Total Variance**: $V = \sigma_a^2 + \sigma_z^2 + 2\rho\sigma_a\sigma_z + \sigma_\varepsilon^2$
+2. **Manager-Manager 2-step Covariance**: $C_{\text{mm},2} = \sigma_a^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_z^2$
+3. **Firm-Firm 2-step Covariance**: $C_{\text{ff},2} = \sigma_z^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_a^2$
+4. **Manager-Manager 4-step Covariance**: $C_{\text{mm},4} = \rho^2 \cdot C_{\text{mm},2}$
+5. **Firm-Firm 4-step Covariance**: $C_{\text{ff},4} = \rho^2 \cdot C_{\text{ff},2}$
 
-### GMM Estimation
+The key insight is that each additional step in the network path introduces a factor of $\rho$, so 4-step covariances are simply $\rho^2$ times the 2-step covariances. This permits constructive identification.
+
+### Constructive Estimation via Covariance Ratios
+
+**Direct Identification**:
+The ratio of 4-step to 2-step covariances directly identifies $\rho^2$:
+$$\rho^2 = \frac{C_{\text{mm},4}}{C_{\text{mm},2}} = \frac{C_{\text{ff},4}}{C_{\text{ff},2}}$$
+
+This ratio cancels all variance and cross-product terms, isolating the sorting parameter. The two ratios provide consistency checks.
+
+**Path Attenuation Interpretation**:
+The ratio measures how correlation decays as we move further in the mobility network. A 4-step path $m_1 \leftrightarrow i \leftrightarrow m_2 \leftrightarrow i' \leftrightarrow m_3$ requires two additional "hops" through the matching process compared to a 2-step connection. Each hop introduces one factor of $\rho$, giving $\rho^2$ attenuation. This provides transparent identification: observe how quickly covariances decay with network distance to infer the strength of sorting.
+
+**Sequential Estimation Procedure**:
+1. Construct bipartite manager-firm graph from mobility data
+2. Compute sample moments: $\widehat{V}$, $\widehat{C}_{\text{mm},2}$, $\widehat{C}_{\text{ff},2}$, $\widehat{C}_{\text{mm},4}$, $\widehat{C}_{\text{ff},4}$
+3. Estimate $\widehat{\rho}^2$ from covariance ratios, averaging manager and firm estimates
+4. Solve for $\widehat{\sigma}_a$ and $\widehat{\sigma}_z$ using difference and sum of 2-step covariances
+5. Recover $\widehat{\sigma}_\varepsilon$ as residual from total variance
+6. Bootstrap standard errors resampling by firm and manager blocks
+
+**Concentrated GMM Alternative**:
+For robustness and efficiency with higher-order paths (6-step, 8-step), use concentrated GMM:
+- For any candidate $\rho$, solve analytically for $(\sigma_a(\rho), \sigma_z(\rho), \sigma_\varepsilon(\rho))$
+- Minimize weighted distance between observed and predicted higher-order covariances
+- Computational complexity remains 1D optimization over $\rho \in [-1,1]$
+- Useful for testing overidentifying restrictions and combining multiple path lengths
 
 **Estimation Results Structure**:
-- Standard deviation of log firm productivity (σ_a)
-- Standard deviation of log manager skill (σ_z)
+- Standard deviation of log firm effect (σ_a)
+- Standard deviation of log manager effect (σ_z)
 - Correlation between firm and manager types (ρ)
-- Noise standard deviation (σ_u)
-- Matching friction parameter (σ_friction)
+- Match-specific noise standard deviation (σ_ε)
 - Objective function value and convergence status
-
-**Estimation Procedure**:
-- Define moment conditions from theoretical model
-- Construct GMM objective function using optimal weighting matrix
-- Optimize using numerical methods (BFGS or similar)
-- Return parameter estimates with standard errors
 
 ### Identification Strategy
 
-The identification exploits the insight that under random dissolution:
-- **Dissolved matches** form a representative sample of the population
-- **New matches** follow the equilibrium assignment rule
-- **Correlation structure** in old vs. new manager quality reveals sorting strength
+Identification relies on path-length decay in the mobility network:
+- **2-step covariances** (same firm/manager): Identify linear combinations of variances without noise contamination
+- **4-step covariances** (second-degree connections): Scale 2-step covariances by exactly $\rho^2$, enabling direct identification via ratios
+- **Total variance**: Recovers match-specific noise after controlling for systematic components
+- **Overidentification**: Two 4-step moments (manager and firm sides) provide consistency checks and specification testing
 
 ## Simulation Experiments
 

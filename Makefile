@@ -28,6 +28,14 @@ estimate: simulate
 # Compile paper
 paper: output/paper.pdf
 
+# Alias for clarity
+paper-typst: paper
+
+# Watch Typst file and recompile on changes (requires Typst 0.11+)
+paper-watch:
+	@echo "Watching Typst sources..."
+	typst watch output/paper.typ output/paper.pdf
+
 output/paper.pdf: output/paper.typ
 	@echo "Compiling paper to PDF..."
 	typst compile output/paper.typ output/paper.pdf

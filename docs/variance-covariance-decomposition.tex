@@ -1,0 +1,233 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\onehalfspacing
+
+\title{Variance--Covariance Decomposition for Manager--Firm Matching and Its Implementation on Hungarian CEO--Firm Data}
+\author{\textit{Draft}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We develop a method-of-moments approach to quantify sorting between firm and manager types using only firm-level revenues and mobility links between managers and firms. The method exploits a variance--covariance decomposition implied by a random-effects model with correlation between firm effects and manager effects. Identification relies on covariances of log revenues across manager--manager and firm--firm pairs at different path lengths in the projected mobility network. We outline the model, derive moment formulas for 2-step and 4-step links, describe an estimation strategy that is overidentified, and detail an implementation plan for a 30-year panel of Hungarian CEO--firm matches.
+\end{abstract}
+
+\section{Motivation}
+Understanding the strength of assortative matching between firms and managers is central to assessing allocative efficiency and its evolution over time. Existing approaches often require estimating high-dimensional fixed effects or structural models. We propose a simpler, transparent alternative based on second moments of log revenues and the topology of the mobility network. The key object of interest is the correlation between firm and manager types, which we denote by $\rho$. Higher $\rho$ indicates tighter sorting and, under standard models of assignment with complementarities, more efficient allocation.
+
+\section{Model and Assumptions}
+\label{sec:model}
+Consider matches between firms $i$ and managers $m$ observed within short, non-overlapping windows (e.g., three-year windows). Let $y_{im}$ denote the log revenue of firm $i$ under manager $m$ aggregated within a window. We posit the decomposition
+\begin{equation}
+\label{eq:model}
+ y_{im} = a_i + z_m + \varepsilon_{im},
+\end{equation}
+where $a_i$ is a log firm effect, $z_m$ is a log manager effect, and $\varepsilon_{im}$ is a match-specific disturbance. We assume:
+\begin{itemize}
+  \item $(a_i, z_m)$ are jointly centered with $\mathbb{E}[a_i]=\mathbb{E}[z_m]=0$, variances $\operatorname{Var}(a_i)=\sigma_a^2$, $\operatorname{Var}(z_m)=\sigma_z^2$, and covariance $\operatorname{Cov}(a_i,z_m)=\rho\,\sigma_a\sigma_z$ with $\rho\in[-1,1]$.
+  \item Conditional independence along links: conditional on a firm type $a$, manager types hired by that firm in a window are independent draws from the conditional distribution of $z\mid a$; analogously, conditional on a manager type $z$, firm types worked at by that manager are independent draws from $a\mid z$.
+  \item Joint normality of $(a,z)$, or more generally a linear conditional expectation structure, so that
+  \begin{equation}
+   \mathbb{E}[z\mid a] = \frac{\rho\,\sigma_z}{\sigma_a}a,\qquad \mathbb{E}[a\mid z] = \frac{\rho\,\sigma_a}{\sigma_z}z.
+  \end{equation}
+  \item $\varepsilon_{im}$ is mean-zero, independent across matches, and independent of $(a_i, z_m)$, with variance $\sigma_\varepsilon^2$. Within a short window, time aggregation may reduce transitory noise; our identification relies only on cross-match independence of $\varepsilon$.
+\end{itemize}
+Parameters of interest are $\theta=(\sigma_a,\sigma_z,\rho,\sigma_\varepsilon)$.
+
+\section{Moments from the Mobility Network}
+We represent the data within a window as a bipartite graph between firms and managers. Projecting the bipartite graph onto the manager (respectively firm) side yields an undirected graph where an edge connects two managers (firms) if they have worked at the same firm (manager) within the window. Paths of even length in these projections capture higher-order co-employment relationships.
+
+\subsection{Cross-sectional variance}
+Unconditionally across matches, the variance of $y$ is
+\begin{equation}
+\label{eq:var}
+ V \equiv \operatorname{Var}(y) = \sigma_a^2 + \sigma_z^2 + 2\rho\,\sigma_a\sigma_z + \sigma_\varepsilon^2.
+\end{equation}
+
+\subsection{Two-step covariances (direct neighbors)}
+Consider two managers $m$ and $m'$ who worked at the same firm $i$ (manager--manager link at distance 2). Under the model,
+\begin{equation}
+\label{eq:mm2}
+ \operatorname{Cov}(y_{im}, y_{im'}) = \sigma_a^2 + 2\rho\,\sigma_a\sigma_z + \rho^2\,\sigma_z^2.
+\end{equation}
+Similarly, for two firms $i$ and $i'$ that have been run by the same manager $m$ (firm--firm link at distance 2),
+\begin{equation}
+\label{eq:ff2}
+ \operatorname{Cov}(y_{im}, y_{i'm}) = \sigma_z^2 + 2\rho\,\sigma_a\sigma_z + \rho^2\,\sigma_a^2.
+\end{equation}
+These expressions follow from the law of total covariance and the linear conditional expectation structure. Intuitively, at distance 2 the side shared by the pair (firm for manager--manager; manager for firm--firm) enters with full variance, while the opposite side is ``projected'' through $\rho$ and enters with dampening $\rho^2$.
+
+\subsection{Four-step covariances (second neighbors)}
+Now consider manager--manager pairs connected by a length-4 path in the manager projection, i.e., $m$ and $m'$ worked at firms $i$ and $i'$, respectively, and there exists an intermediate manager $\tilde m$ such that $m$ and $\tilde m$ share firm $i$ and $\tilde m$ and $m'$ share firm $i'$. Along this path, each step introduces a factor of $\rho$, so the 4-step covariance is simply $\rho^2$ times the 2-step covariance:
+\begin{equation}
+\label{eq:mm4}
+ \operatorname{Cov}(y_{im}, y_{i'm'}) = \rho^2 \cdot \operatorname{Cov}_{\text{mm},2} = \rho^2(\sigma_a^2 + 2\rho\,\sigma_a\sigma_z + \rho^2\,\sigma_z^2).
+\end{equation}
+By symmetry, for firm--firm pairs connected by a length-4 path in the firm projection,
+\begin{equation}
+\label{eq:ff4}
+ \operatorname{Cov}(y_{im}, y_{i'm'}) = \rho^2 \cdot \operatorname{Cov}_{\text{ff},2} = \rho^2(\sigma_z^2 + 2\rho\,\sigma_a\sigma_z + \rho^2\,\sigma_a^2).
+\end{equation}
+This simple structure reveals that the ratio of 4-step to 2-step covariances directly identifies $\rho^2$:
+\begin{equation}
+\label{eq:rho-ratio}
+ \rho^2 = \frac{\operatorname{Cov}_{\text{mm},4}}{\operatorname{Cov}_{\text{mm},2}} = \frac{\operatorname{Cov}_{\text{ff},4}}{\operatorname{Cov}_{\text{ff},2}}.
+\end{equation}
+
+\paragraph{Proof sketch for \eqref{eq:mm4}.} Write $y_{im}=a_i+z_m+\varepsilon_{im}$ and $y_{i'm'}=a_{i'}+z_{m'}+\varepsilon_{i'm'}$. The path $m \leftrightarrow i \leftrightarrow \tilde m \leftrightarrow i' \leftrightarrow m'$ implies $\mathbb{E}[a_{i'}\mid a_i] = \rho^2 a_i$ (two steps through $z_{\tilde m}$). Using iterated expectations and independence of $\varepsilon$,
+\begin{align*}
+ \operatorname{Cov}(y_{im}, y_{i'm'}) &= \mathbb{E}[\operatorname{Cov}(y_{im}, y_{i'm'} \mid A_i)] + \operatorname{Cov}(\mathbb{E}[y_{im}\mid A_i], \mathbb{E}[y_{i'm'}\mid A_i]) \\
+ &= \mathbb{E}[A_i \cdot \rho^2 A_i] + \text{cross-terms} = \rho^2 \mathbb{E}[A_i(\mathbb{E}[y_{im}\mid A_i])] \\
+ &= \rho^2 \operatorname{Cov}_{\text{mm},2},
+\end{align*}
+where the key step uses that conditioning on the shared firm $i$ gives $\operatorname{Cov}_{\text{mm},2}$, and the additional path to $m'$ introduces the factor $\rho^2$.
+
+\subsection{Excess-variance identities}
+A useful rearrangement removes components that are common to the 2-step covariances. Subtracting \eqref{eq:mm2} and \eqref{eq:ff2} from the total variance \eqref{eq:var} yields
+\begin{align}
+\label{eq:excess-mm2}
+ V - \operatorname{Cov}_{\text{mm},2} &= (1-\rho^2)\,\sigma_z^2 + \sigma_\varepsilon^2, \\
+\label{eq:excess-ff2}
+ V - \operatorname{Cov}_{\text{ff},2} &= (1-\rho^2)\,\sigma_a^2 + \sigma_\varepsilon^2.
+\end{align}
+Because covariances purge the match disturbance, these identities isolate a combination of the same-side variance and the noise variance. Higher-order analogues can be constructed, but for identification we will use the 2-step and 4-step covariances directly.
+
+\section{Identification and Estimation}
+\label{sec:ident}
+Equations \eqref{eq:var}--\eqref{eq:ff4} provide five moment conditions for four parameters $\theta=(\sigma_a,\sigma_z,\rho,\sigma_\varepsilon)$. The system is overidentified, and the simple ratio structure \eqref{eq:rho-ratio} permits constructive estimation.
+
+\subsection{Constructive Estimation via Covariance Ratios}
+\label{sec:constructive}
+The ratio \eqref{eq:rho-ratio} provides a direct estimator of $\rho^2$:
+\begin{equation}
+\label{eq:rho2-est}
+ \widehat{\rho^2} = \frac{\widehat C_{\text{mm},4}}{\widehat C_{\text{mm},2}} \quad \text{or} \quad \widehat{\rho^2} = \frac{\widehat C_{\text{ff},4}}{\widehat C_{\text{ff},2}}.
+\end{equation}
+With two independent estimates from manager and firm projections, we can take an average or test for consistency. This ratio estimator has an appealing interpretation: it is equivalent to the coefficient from an instrumental variables regression.
+
+\paragraph{Interpretation via path attenuation.} The ratio structure has an intuitive interpretation: as we move further in the network (from 2 steps to 4 steps), the covariance attenuates by exactly $\rho^2$. This is because each additional "hop" through the matching process introduces one factor of $\rho$. A 4-step path requires two hops beyond the direct 2-step connection, hence the $\rho^2$ attenuation.
+
+More formally, consider the correlation structure along the path $m_1 \leftrightarrow i \leftrightarrow m_2 \leftrightarrow i' \leftrightarrow m_3$. The outcomes $y_{i1}$ and $y_{i'3}$ are connected only through their correlation with the intermediate firm types $a_i$ and $a_{i'}$, which are themselves connected through $z_{m_2}$. Each link in this chain contributes a factor of $\rho$ to the correlation, giving $\rho^2$ for the complete path.
+
+\paragraph{Why IV works.} The key insight is that 2-step covariances contain both the systematic components $(\sigma_a^2, \sigma_z^2, \rho)$ and are free of $\varepsilon$ contamination, while 4-step covariances scale all systematic components by exactly $\rho^2$. Taking ratios cancels all variance and cross-product terms:
+\begin{equation}
+ \frac{C_{\text{mm},4}}{C_{\text{mm},2}} = \frac{\rho^2(\sigma_a^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_z^2)}{\sigma_a^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_z^2} = \rho^2.
+\end{equation}
+The numerator and denominator contain identical combinations of variances, so the ratio is parameter-free except for $\rho^2$.
+
+\paragraph{Sequential estimation.} Given $\widehat\rho$, the excess-variance identities \eqref{eq:excess-mm2} and \eqref{eq:excess-ff2} yield
+\begin{align}
+\label{eq:seq-est}
+ \widehat\sigma_z^2 &= \frac{\widehat V - \widehat C_{\text{mm},2} - \widehat\sigma_\varepsilon^2}{1 - \widehat\rho^2}, \\
+ \widehat\sigma_a^2 &= \frac{\widehat V - \widehat C_{\text{ff},2} - \widehat\sigma_\varepsilon^2}{1 - \widehat\rho^2}.
+\end{align}
+Subtracting these gives
+\begin{equation}
+\label{eq:diff-sigma}
+ \widehat\sigma_z^2 - \widehat\sigma_a^2 = \frac{\widehat C_{\text{ff},2} - \widehat C_{\text{mm},2}}{1 - \widehat\rho^2}.
+\end{equation}
+Combining \eqref{eq:diff-sigma} with \eqref{eq:mm2} or \eqref{eq:ff2} solves for $\widehat\sigma_a$ and $\widehat\sigma_z$. Finally, $\widehat\sigma_\varepsilon^2$ follows from \eqref{eq:var}:
+\begin{equation}
+\label{eq:eps-est}
+ \widehat\sigma_\varepsilon^2 = \widehat V - \widehat\sigma_a^2 - \widehat\sigma_z^2 - 2\widehat\rho\,\widehat\sigma_a\widehat\sigma_z.
+\end{equation}
+
+\paragraph{Summary of constructive estimator.}
+\begin{enumerate}
+ \item Estimate $\rho^2$ from covariance ratios \eqref{eq:rho2-est}, taking the sign from the 2-step covariances.
+ \item Solve for $\sigma_a^2$ and $\sigma_z^2$ using \eqref{eq:diff-sigma} and sum constraints from 2-step covariances.
+ \item Recover $\sigma_\varepsilon^2$ as the residual from total variance \eqref{eq:eps-est}.
+\end{enumerate}
+This constructive approach is computationally trivial and provides closed-form estimates with transparent identification.
+
+\subsection{Concentrated GMM for Higher-Order Paths}
+\label{sec:concentrated}
+While the ratio estimator \eqref{eq:rho2-est} provides a constructive solution, concentrated GMM becomes useful when incorporating higher-order covariances (6-step, 8-step, etc.) or handling measurement error. The structure of the moment conditions permits analytical concentration: for any candidate $\rho$, solve for $(\sigma_a,\sigma_z,\sigma_\varepsilon)$ in closed form.
+
+For fixed $\rho$, the difference of excess-variance identities \eqref{eq:excess-mm2} and \eqref{eq:excess-ff2} yields
+\begin{equation}
+\label{eq:sigma-diff}
+ \sigma_z^2(\rho) - \sigma_a^2(\rho) = \frac{\widehat C_{\text{ff},2} - \widehat C_{\text{mm},2}}{1-\rho^2}.
+\end{equation}
+The 2-step covariances sum to
+\begin{equation}
+\label{eq:sum-cov2}
+ \widehat C_{\text{mm},2} + \widehat C_{\text{ff},2} = (1+\rho^2)(\sigma_a^2 + \sigma_z^2) + 4\rho\,\sigma_a\sigma_z.
+\end{equation}
+Denote $S \equiv \sigma_a^2 + \sigma_z^2$ and $D \equiv \sigma_z^2 - \sigma_a^2$. From \eqref{eq:sigma-diff}, $D$ is known given $\rho$. The product $\sigma_a\sigma_z = \sqrt{(\tfrac{S+D}{2})(\tfrac{S-D}{2})} = \tfrac{1}{2}\sqrt{S^2 - D^2}$. Substituting into \eqref{eq:sum-cov2} and solving for $S$ gives $\sigma_a^2(\rho) = (S-D)/2$ and $\sigma_z^2(\rho) = (S+D)/2$. Finally,
+\begin{equation}
+\label{eq:sigma-eps-rho}
+ \sigma_\varepsilon^2(\rho) = \widehat V - \sigma_a^2(\rho) - \sigma_z^2(\rho) - 2\rho\,\sigma_a(\rho)\sigma_z(\rho).
+\end{equation}
+
+With $\theta(\rho) = (\sigma_a(\rho), \sigma_z(\rho), \sigma_\varepsilon(\rho))$ determined analytically, the GMM problem reduces to one-dimensional search over $\rho\in[-1,1]$:
+\begin{equation}
+\label{eq:concentrated-gmm}
+ \widehat\rho_{\text{GMM}} = \arg\min_{\rho\in[-1,1]} Q(\rho),
+\end{equation}
+where $Q(\rho)$ is a weighted distance between observed and predicted 4-step (or higher-order) covariances. For $h$-step paths with $h>4$, the model implies $C_{k,h} = \rho^{h-2} C_{k,2}$, providing additional overidentifying restrictions. The concentrated approach is particularly valuable when:
+\begin{itemize}
+ \item Combining multiple path lengths to improve precision
+ \item Testing overidentifying restrictions from longer paths
+ \item Accommodating heteroskedasticity or clustering in the moment conditions
+ \item Imposing additional structure (e.g., bounds on parameters)
+\end{itemize}
+
+\section{Empirical Implementation on Hungarian CEO--Firm Data}
+\label{sec:implementation}
+We implement the procedure on a universe of Hungarian firms and CEOs over 30 years. The panel will be partitioned into ten non-overlapping three-year windows (alternative overlapping windows provide robustness). For each window we compute the five sample moments and estimate $\theta$.
+
+\subsection{Data construction}
+\begin{itemize}
+  \item Outcome: $y_{im}$ is the log of real firm revenue aggregated over the window while manager $m$ is in office at firm $i$. We deflate nominal revenue using standard price indices. If a firm--manager relation spans multiple years within a window, we average log revenues or equivalently sum revenues and take logs; both are acceptable provided consistency across observations.
+  \item Graphs: Build a bipartite incidence matrix $B$ of size (firms $\times$ managers) with $B_{im}=1$ if manager $m$ is observed at firm $i$ within the window. The manager projection is $W_M = B'B$ with diagonal set to zero; the firm projection is $W_F = BB'$ with diagonal set to zero.
+  \item Two-step pairs: Manager pairs with $(W_M)_{mm'}>0$ and firm pairs with $(W_F)_{ii'}>0$ form the 2-step sets. For each pair, construct matched observations of $y$ from the relevant spells and compute sample covariances across pairs. We weight pairs equally; robustness checks consider degree-based weights.
+  \item Four-step pairs: Use squared projection matrices $W_M^{(2)}=(W_M)^2$ and $W_F^{(2)}=(W_F)^2$; off-diagonal positive entries indicate existence of at least one length-4 path. Construct the set of unique pairs and compute sample covariances of $y$ across these pairs. We deduplicate multiple paths between the same pair.
+\end{itemize}
+
+\subsection{Moment estimation and uncertainty}
+\begin{itemize}
+  \item Compute $\widehat V$ as the sample variance of $y$ across all observed firm--manager spells in the window.
+  \item Compute $\widehat C_{\text{mm},2}$ and $\widehat C_{\text{ff},2}$ as sample covariances across the 2-step manager and firm pairs, respectively.
+  \item Compute $\widehat C_{\text{mm},4}$ and $\widehat C_{\text{ff},4}$ across the 4-step pairs.
+  \item Estimate $\theta$ by minimizing \eqref{eq:gmm}. Obtain standard errors via nonparametric bootstrap resampling by firm and manager blocks or via a pairs-of-pairs bootstrap that preserves network dependence.
+\end{itemize}
+
+\subsection{Practical considerations}
+\begin{itemize}
+  \item Window length: Two- to four-year windows balance the need for stable revenue measurement and evolving network moments. The model assumes stationarity within a window.
+  \item Multiple CEOs or co-management: If multiple managers serve concurrently, treat each manager--firm spell separately or aggregate to a primary manager; we will assess sensitivity.
+  \item Outliers and winsorization: Winsorize extreme revenues symmetrically to reduce undue influence on variance and covariance estimates.
+  \item Market coverage: Use the full universe of firms and managers; no sampling is required for identification.
+\end{itemize}
+
+\section{Interpretation and Hypotheses}
+The parameter $\rho$ measures the correlation between log firm and log manager types. Under complementarity, higher $\rho$ indicates improved sorting. Based on the transition dynamics of the 1990s, we hypothesize that $\rho$ rose over time as markets matured. The noise variance $\sigma_\varepsilon^2$ captures match-specific productivity or measurement error; we expect it to be sizable, necessitating the covariance-based correction to recover $\rho$. We track the evolution of $(\sigma_a, \sigma_z, \rho, \sigma_\varepsilon)$ across windows to characterize changes in firm and manager heterogeneity and sorting strength.
+
+\section{Robustness and Extensions}
+\begin{itemize}
+  \item Higher-order links: Extend to 6-step covariances; under the model, manager--manager covariances at length $2h$ follow $\rho^{h-1} C_{\text{mm},2}$ (and symmetrically for firm--firm). Overidentification tests assess model fit.
+  \item Alternative outcomes: Replace revenue with value added or profits to assess sensitivity to accounting practices.
+  \item Selection and mobility frictions: Short windows mitigate time variation in types; incorporating explicit dynamics (e.g., Choo--Siow assignment with Calvo separations) can microfound $\rho$ and link it to frictions.
+\end{itemize}
+
+\section{Conclusion}
+We provide a transparent decomposition that uses only second moments and mobility network structure to identify sorting between firms and managers. The approach scales to large administrative datasets and yields time profiles of sorting and heterogeneity that are informative about allocative efficiency.
+
+\paragraph{Computation workflow.} Implementation will be integrated into the project Makefile: construct graphs and moments per window, estimate $\theta$ by GMM, and produce figures showing the evolution of $\rho$, $\sigma_a$, $\sigma_z$, and $\sigma_\varepsilon$ over three-decade Hungarian data.
+
+\bibliographystyle{ecta}
+\begin{thebibliography}{9}
+\bibitem[Abowd, Kramarz, and Margolis(1999)]{AKM1999} Abowd, J. M., F. Kramarz, and D. N. Margolis (1999): ``High Wage Workers and High Wage Firms,'' \emph{Econometrica}, 67(2), 251--333.
+\bibitem[Choo and Siow(2006)]{ChooSiow2006} Choo, E., and A. Siow (2006): ``Who Marries Whom and Why,'' \emph{Journal of Political Economy}, 114(1), 175--201.
+\bibitem[Graham(2008)]{Graham2008} Graham, B. S. (2008): ``Identifying Social Interactions Through Conditional Variance Restrictions,'' \emph{Econometrica}, 76(3), 643--660.
+\end{thebibliography}
+
+\end{document}
