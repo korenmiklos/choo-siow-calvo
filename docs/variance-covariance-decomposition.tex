@@ -8,8 +8,8 @@
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 \onehalfspacing
 
-\title{Variance--Covariance Decomposition for Manager--Firm Matching and Its Implementation on Hungarian CEO--Firm Data}
-\author{\textit{Draft}}
+\title{Variance--Covariance Decomposition for Manager--Firm Matching and Its Implementation on Hungarian CEO--Firm Data\thanks{I thank Gregory Clark for useful discussions.}}
+\author{Miklós Koren}
 \date{\today}
 
 \begin{document}
@@ -65,7 +65,7 @@ Similarly, for two firms $i$ and $i'$ that have been run by the same manager $m$
 These expressions follow from the law of total covariance and the linear conditional expectation structure. Intuitively, at distance 2 the side shared by the pair (firm for manager--manager; manager for firm--firm) enters with full variance, while the opposite side is ``projected'' through $\rho$ and enters with dampening $\rho^2$.
 
 \subsection{Four-step covariances (second neighbors)}
-Now consider manager--manager pairs connected by a length-4 path in the manager projection, i.e., $m$ and $m'$ worked at firms $i$ and $i'$, respectively, and there exists an intermediate manager $\tilde m$ such that $m$ and $\tilde m$ share firm $i$ and $\tilde m$ and $m'$ share firm $i'$. Along this path, each step introduces a factor of $\rho$, so the 4-step covariance is simply $\rho^2$ times the 2-step covariance:
+Now consider manager--manager pairs connected by a length-4 path in the manager projection, i.e., $m$ and $m'$ worked at firms $i$ and $i'$, respectively, and there exists an intermediate manager $\tilde m$ such that $m$ and $\tilde m$ share firm $i$ and $\tilde m$ and $m'$ share firm $i'$. Following \citet{Clark2023}, who used longer genealogical paths to measure intergenerational correlation of social status, we exploit the fact that each step introduces a factor of $\rho$, so the 4-step covariance is simply $\rho^2$ times the 2-step covariance:
 \begin{equation}
 \label{eq:mm4}
  \operatorname{Cov}(y_{im}, y_{i'm'}) = \rho^2 \cdot \operatorname{Cov}_{\text{mm},2} = \rho^2(\sigma_a^2 + 2\rho\,\sigma_a\sigma_z + \rho^2\,\sigma_z^2).
@@ -213,7 +213,7 @@ The parameter $\rho$ measures the correlation between log firm and log manager t
 
 \section{Robustness and Extensions}
 \begin{itemize}
-  \item Higher-order links: Extend to 6-step covariances; under the model, manager--manager covariances at length $2h$ follow $\rho^{h-1} C_{\text{mm},2}$ (and symmetrically for firm--firm). Overidentification tests assess model fit.
+  \item Higher-order links: Following \citet{Clark2023}'s approach of using multiple path lengths to measure correlation, extend to 6-step, 8-step, and longer covariances. Under the model, manager--manager covariances at length $2h$ follow $\rho^{h-1} C_{\text{mm},2}$ (and symmetrically for firm--firm). Overidentification tests assess model fit.
   \item Alternative outcomes: Replace revenue with value added or profits to assess sensitivity to accounting practices.
   \item Selection and mobility frictions: Short windows mitigate time variation in types; incorporating explicit dynamics (e.g., Choo--Siow assignment with Calvo separations) can microfound $\rho$ and link it to frictions.
 \end{itemize}
@@ -227,6 +227,7 @@ We provide a transparent decomposition that uses only second moments and mobilit
 \begin{thebibliography}{9}
 \bibitem[Abowd, Kramarz, and Margolis(1999)]{AKM1999} Abowd, J. M., F. Kramarz, and D. N. Margolis (1999): ``High Wage Workers and High Wage Firms,'' \emph{Econometrica}, 67(2), 251--333.
 \bibitem[Choo and Siow(2006)]{ChooSiow2006} Choo, E., and A. Siow (2006): ``Who Marries Whom and Why,'' \emph{Journal of Political Economy}, 114(1), 175--201.
+\bibitem[Clark(2023)]{Clark2023} Clark, G. (2023): ``The Inheritance of Social Status: England, 1600 to 2022,'' \emph{Proceedings of the National Academy of Sciences of the United States of America}, 120(27), e2300926120.
 \bibitem[Graham(2008)]{Graham2008} Graham, B. S. (2008): ``Identifying Social Interactions Through Conditional Variance Restrictions,'' \emph{Econometrica}, 76(3), 643--660.
 \end{thebibliography}
 
