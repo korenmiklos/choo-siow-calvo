@@ -60,12 +60,12 @@ The unconditional variance of $y$ is
 For two managers $m$ and $m'$ who worked at the same firm $i$ (manager--manager link at distance 2), the covariance is
 \begin{equation}
 \label{eq:mm2}
- \operatorname{Cov}(y_{im}, y_{im'}) = \sigma_a^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_z^2.
+ \operatorname{Cov}(y_{im}, y_{im'}) = \sigma_a^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_z^2 = (\sigma_a + \rho\sigma_z)^2.
 \end{equation}
 Similarly, for two firms $i$ and $i'$ run by the same manager $m$ (firm--firm link at distance 2),
 \begin{equation}
 \label{eq:ff2}
- \operatorname{Cov}(y_{im}, y_{i'm}) = \sigma_z^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_a^2.
+ \operatorname{Cov}(y_{im}, y_{i'm}) = \sigma_z^2 + 2\rho\sigma_a\sigma_z + \rho^2\sigma_a^2 = (\sigma_z + \rho\sigma_a)^2.
 \end{equation}
 These expressions follow from the law of total covariance and linear conditional expectations.
 
@@ -90,6 +90,19 @@ This simple structure reveals that the ratio of 4-step to 2-step covariances dir
 \[
  \operatorname{Cov}(y_{im}, y_{i'm'}) = \rho^2\sigma_a^2 + 2\rho^3\sigma_a\sigma_z + \rho^4\sigma_z^2 = \rho^2 C_{\text{mm},2}.
 \]
+
+\subsection*{Higher-order moments}
+The path attenuation principle extends to arbitrary even path lengths. For 6-step manager-manager pairs connected by path $m_1 \leftrightarrow i_1 \leftrightarrow m_2 \leftrightarrow i_2 \leftrightarrow m_3 \leftrightarrow i_3 \leftrightarrow m_4$, the observed covariance $\operatorname{Cov}(y_{i_1m_1}, y_{i_3m_4})$ decomposes into four latent covariances: $\operatorname{Cov}(a_{i_1}, a_{i_3}) + \operatorname{Cov}(a_{i_1}, z_{m_4}) + \operatorname{Cov}(z_{m_1}, a_{i_3}) + \operatorname{Cov}(z_{m_1}, z_{m_4})$.\footnote{The random-effects model can be formalized as a bipartite Gaussian Markov random field (6), in which conditional independencies follow the network structure and correlations decay exponentially with graph distance. See SI Appendix for the precision matrix formulation.} By path propagation, firm-firm distance 4 gives $\operatorname{Cov}(a_{i_1}, a_{i_3})=\rho^4\sigma_a^2$; manager-manager distance 6 gives $\operatorname{Cov}(z_{m_1}, z_{m_4})=\rho^6\sigma_z^2$; and the cross-type paths (distance 5) each contribute $\rho^5\sigma_a\sigma_z$. Summing yields
+\begin{equation}
+\label{eq:mm6}
+ \operatorname{Cov}(y_{i_1m_1}, y_{i_3m_4}) = \rho^4\sigma_a^2 + 2\rho^5\sigma_a\sigma_z + \rho^6\sigma_z^2 = \rho^4(\sigma_a + \rho\sigma_z)^2.
+\end{equation}
+This is exactly $\rho^4$ times the 2-step manager-manager covariance, confirming the general pattern
+\begin{equation}
+\label{eq:general-pattern}
+ C_{\text{mm},h} = \rho^{h-2} C_{\text{mm},2}, \quad C_{\text{ff},h} = \rho^{h-2} C_{\text{ff},2}
+\end{equation}
+for $h$-step paths with $h$ even. These higher-order moments provide additional overidentifying restrictions: the model with four parameters predicts infinitely many moments, enabling specification tests.
 
 \section*{Identification and Estimation}
 
@@ -275,6 +288,21 @@ Hungarian firm-CEO data come from the tax authority and cover 1992--2021. For ea
 
 The Hungarian tax authority data used in this study are confidential and cannot be made publicly available due to privacy restrictions. Researchers may apply for access through the HUN-REN Centre for Economic and Regional Studies data access process. Code for implementing the estimation procedure will be made available on GitHub upon publication.
 
+% TODO: Create SI Appendix with full GMRF formulation (Rue & Held 2005, ref 6)
+% SI should include:
+% 1. Precision matrix formulation: Q with blocks D_A = σ_a^{-2} I, D_Z = σ_z^{-2} I, off-diagonal -ρW
+%    where W shares sparsity pattern of adjacency matrix G
+% 2. Conditional independence structure: a_i ⊥ (a_{-i}, z_{J\N(i)}) | z_{N(i)}
+% 3. Marginal variance expressions: Var(a_i)=σ_a^2, Var(z_j)=σ_z^2, Cov(a_i,z_j)=ρσ_aσ_z
+% 4. Proof that dependence propagates along edges and decays exponentially with path length
+% 5. Discussion of how additive noise ε_{ij} makes observed field non-Markovian
+% 6. Derivations for 8-step, 10-step moments as additional overidentification tests
+% 7. Connection to spatial statistics and network autoregression literature
+
+% TODO: Implement estimation with 6-step and 8-step moments for robustness
+% Use general pattern C_h = ρ^{h-2} C_2 to test model fit
+% If overidentification tests reject, consider extensions (heterogeneous ρ, non-Gaussian noise)
+
 }
 
 \showmatmethods{}
@@ -309,6 +337,11 @@ The Inheritance of Social Status: England, 1600 to 2022.
 B. S. Graham, 
 Identifying Social Interactions Through Conditional Variance Restrictions. 
 \textit{Econometrica} \textbf{76}, 643--660 (2008).
+
+\bibitem{RueHeld2005}
+H. Rue, L. Held, 
+\textit{Gaussian Markov Random Fields: Theory and Applications}. 
+(Chapman \& Hall/CRC, Boca Raton, FL, 2005).
 
 \end{thebibliography}
 
