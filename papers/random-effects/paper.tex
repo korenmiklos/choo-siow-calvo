@@ -39,7 +39,7 @@ We develop a method-of-moments approach to quantify sorting between firm and man
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\dropcap{U}nderstanding the strength of assortative matching between firms and managers is central to assessing allocative efficiency and its evolution. Existing approaches often require estimating high-dimensional fixed effects or structural models. We propose a simpler, transparent alternative based on second moments of log revenues and the topology of the mobility network. The key object of interest is the correlation between firm and manager types, denoted $\rho$. Higher $\rho$ indicates tighter sorting and, under standard models of assignment with complementarities, more efficient allocation.
+\dropcap{U}nderstanding the strength of assortative matching between firms and managers is central to assessing allocative efficiency and its evolution. Existing approaches often require estimating high-dimensional fixed effects in matched employer-employee data (1, 11, 12), which suffer from limited mobility bias and require complex bias corrections (13, 14). We propose a simpler, transparent alternative based on second moments of log revenues and the topology of the mobility network. The key object of interest is the correlation between firm and manager types, denoted $\rho$. Higher $\rho$ indicates tighter sorting and, under standard models of assignment with complementarities, more efficient allocation.
 
 \section*{Model and Assumptions}
 
@@ -277,9 +277,9 @@ The strong positive sorting ($\rho \approx 0.89$--0.96) combined with firm heter
 
 Second, the dominance of firm heterogeneity suggests firm-specific characteristics---technology, capital, market position---account for most revenue variation. CEO quality matters primarily through interaction with firm type rather than independently. This complements event study evidence showing modest causal effects of CEO transitions on the same Hungarian data (7).
 
-% NOTE: Current count: 9 references (PNAS standard is ~50 for 6-page article)
-% Cited: AKM, Andrews, Choo-Siow, Clark, Graham, Rue-Held, Koren-Orban-Telegdy, Bonhomme-Manresa, Bonhomme-Lamadon-Manresa
-Third, our estimates of very strong positive sorting ($\rho \approx 0.89$--0.96) contrast sharply with worker-firm matching literature, where correlations are typically weak or negative (1). Andrews et al.\ (2) find negative assortative matching in German data after correcting for limited mobility bias, with correlations around $-0.1$ to $-0.2$. The difference likely reflects fundamental distinctions between CEO and worker labor markets: CEOs are scarce, high-skill workers whose productivity exhibits strong complementarity with firm capital; the CEO matching process involves intensive search with substantial information revelation; and CEOs capture a large share of match surplus through compensation negotiations, incentivizing efficient sorting. Our correlation estimates also align with the strong positive CEO-firm relationship documented using event study methods (7), though our approach avoids the bias inherent in fixed-effects estimators.
+% NOTE: Current count: 14 references (PNAS standard is ~50 for 6-page article)
+% Cited: AKM, Andrews, Choo-Siow, Clark, Graham, Rue-Held, Koren-Orban-Telegdy, Bonhomme-Manresa, Bonhomme-Lamadon-Manresa, GSS, Card, Kline, Bonhomme2023, Gaure
+Third, our estimates of very strong positive sorting ($\rho \approx 0.89$--0.96) contrast sharply with worker-firm matching literature, where correlations are typically weak or negative (1, 11). Andrews et al.\ (2) find negative assortative matching in German data after correcting for limited mobility bias, with correlations around $-0.1$ to $-0.2$. The difference likely reflects fundamental distinctions between CEO and worker labor markets: CEOs are scarce, high-skill workers whose productivity exhibits strong complementarity with firm capital; the CEO matching process involves intensive search with substantial information revelation; and CEOs capture a large share of match surplus through compensation negotiations, incentivizing efficient sorting. Our correlation estimates also align with the strong positive CEO-firm relationship documented using event study methods (7), though our approach avoids the limited mobility bias that affects fixed-effects estimators (12, 13, 14).
 
 \section*{Discussion}
 
@@ -408,6 +408,26 @@ A Distributional Framework for Matched Employer Employee Data.
 E. L. Glaeser, B. I. Sacerdote, J. A. Scheinkman, 
 The Social Multiplier. 
 \textit{J. Eur. Econ. Assoc.} \textbf{1}, 345--353 (2003).
+
+\bibitem{Card2018}
+D. Card, A. R. Cardoso, J. Heining, P. Kline, 
+Firms and Labor Market Inequality: Evidence and Some Theory. 
+\textit{J. Labor Econ.} \textbf{36}, S13--S70 (2018).
+
+\bibitem{Kline2024}
+P. Kline, 
+Firm Wage Effects. 
+in \textit{Handbook of Labor Economics}, O. Ashenfelter, D. Card, Eds. (Elsevier, Amsterdam, 2024), vol. 5, pp. 115--181.
+
+\bibitem{Bonhomme2023}
+S. Bonhomme, K. Holzheu, T. Lamadon, E. Manresa, M. Mogstad, B. Setzler, 
+How Much Should We Trust Estimates of Firm Effects and Worker Sorting? 
+\textit{J. Labor Econ.} \textbf{41}, 291--322 (2023).
+
+\bibitem{Gaure2014}
+S. Gaure, 
+Correlation Bias Correction in Two-Way Fixed-Effects Linear Regression. 
+\textit{Stat} \textbf{3}, 379--390 (2014).
 
 \end{thebibliography}
 
