@@ -2,6 +2,9 @@
 
 \templatetype{pnasresearcharticle}
 
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows.meta}
+
 \title{A Tractable Random Effects Model Reveals Strong Positive Sorting in CEO Labor Markets}
 
 \author[a,1]{Miklós Koren}
@@ -109,9 +112,51 @@ for $h$-step paths with $h$ even. These higher-order moments provide additional 
 Equations \eqref{eq:var}--\eqref{eq:ff4} provide five moment conditions for four parameters, yielding an overidentified system. The ratio structure \eqref{eq:rho-ratio} permits constructive estimation.
 
 \subsection*{Path attenuation interpretation}
-% TODO: Add TikZ figure showing firm-manager network with 2-step and 4-step paths
-% Visual explanation of covariance decay identification strategy with network hops
-The ratio measures how correlation decays with network distance. A 4-step path requires two additional "hops" through the matching process compared to a 2-step connection. Each hop introduces one factor of $\rho$, giving $\rho^2$ attenuation. Taking ratios cancels all variance and cross-product terms, isolating $\rho^2$.
+Figure~\ref{fig:network} illustrates the identification strategy using a bipartite network. The ratio measures how correlation decays with network distance. A 4-step path requires two additional "hops" through the matching process compared to a 2-step connection. Each hop introduces one factor of $\rho$, giving $\rho^2$ attenuation. Taking ratios cancels all variance and cross-product terms, isolating $\rho^2$.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  manager/.style={circle, draw=black, thick, minimum size=7mm, inner sep=1pt},
+  firm/.style={rectangle, draw=black, thick, minimum size=7mm, inner sep=1pt},
+  edge/.style={gray!40, thin},
+  path2/.style={blue!70, line width=1.2pt},
+  path4/.style={red!70, line width=1.2pt},
+  scale=0.85,
+  node distance=1.2cm
+]
+
+\node[manager] (m1) {$m_1$};
+\node[manager, below=of m1] (m2) {$m_2$};
+\node[manager, below=of m2] (m3) {$m_3$};
+\node[manager, below=of m3] (m4) {$m_4$};
+
+\node[firm, right=2.5cm of m1] (i1) {$i_1$};
+\node[firm, right=2.5cm of m2] (i2) {$i_2$};
+\node[firm, right=2.5cm of m3] (i3) {$i_3$};
+
+\draw[edge] (m3) -- (i2);
+\draw[edge] (m4) -- (i3);
+
+\draw[path2] (m1) -- (i1);
+\draw[path2] (i1) -- (m2);
+
+\draw[path4] (m2) -- (i2);
+\draw[path4] (i2) -- (m4);
+
+\node[anchor=west, blue!70!black, font=\small] at (5.2, -0.6) {2-step:};
+\node[anchor=west, blue!70!black, font=\footnotesize] at (5.2, -1.1) {$C_{\text{mm},2} = (\sigma_a + \rho\sigma_z)^2$};
+
+\node[anchor=west, red!70!black, font=\small] at (5.2, -2.7) {4-step:};
+\node[anchor=west, red!70!black, font=\footnotesize] at (5.2, -3.2) {$C_{\text{mm},4} = \rho^2(\sigma_a + \rho\sigma_z)^2$};
+
+\node[anchor=north, font=\small] at (1.25, 0.7) {Managers};
+\node[anchor=north, font=\small] at (3.75, 0.7) {Firms};
+
+\end{tikzpicture}
+\caption{Identification from mobility network paths. The bipartite graph connects managers (circles) to firms (squares) where they have worked. Blue path: 2-step connection between managers $m_1$ and $m_2$ sharing firm $i_1$, yielding covariance $C_{\text{mm},2} = (\sigma_a + \rho\sigma_z)^2$. Red path: 4-step connection between managers $m_1$ and $m_4$ through intermediate manager $m_2$ and firms $i_1$ and $i_2$, yielding covariance $C_{\text{mm},4} = \rho^2 C_{\text{mm},2}$. The ratio $C_{\text{mm},4}/C_{\text{mm},2} = \rho^2$ directly identifies the sorting parameter.}
+\label{fig:network}
+\end{figure}
 
 \subsection*{Sequential estimation procedure}
 Average the two ratio estimators:
