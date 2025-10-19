@@ -127,7 +127,7 @@ We grid-search over $\sigma_\varepsilon^2$ to minimize the squared deviation bet
 
 \section*{Empirical Implementation}
 
-We implement the procedure on a comprehensive panel of Hungarian firms and CEOs spanning 1992--2021 from the Hungarian tax authority, covering the near-universe of incorporated firms. The panel is partitioned into ten non-overlapping three-year windows. For each window we construct the bipartite mobility network and compute sample moments.
+We implement the procedure on a comprehensive panel of Hungarian firms and CEOs spanning 1992--2021. Hungary provides an ideal setting with complete administrative data coverage for all incorporated businesses, from the transition economy of the 1990s through EU accession in 2004 to the present. Mandatory CEO registration for every firm enables tracking of executive careers across companies, constructing the mobility networks necessary for identification. The panel is partitioned into ten non-overlapping three-year windows. For each window we construct the bipartite mobility network and compute sample moments (see Methods for data sources and sample construction).
 
 \subsection*{Data construction}
 % TODO: Remove year fixed effects from log revenue before computing moments
@@ -166,7 +166,7 @@ Window & Obs & Firms & Managers & MM 2-step & MM 4-step \\
 \bottomrule
 \end{tabular}
 
-\addtabletext{MM 2-step counts manager-manager pairs sharing at least one firm. MM 4-step counts pure 4-step connections after excluding pairs with direct 2-step links.}
+\addtabletext{Sample includes all private firms (including nonemployer businesses), excluding mining, finance, state-owned, and firms with complex governance (see Methods). MM 2-step counts manager-manager pairs sharing at least one firm. MM 4-step counts pure 4-step connections after excluding pairs with direct 2-step links.}
 \end{table}
 
 \subsection*{Model fit}
@@ -230,17 +230,11 @@ Window & $\widehat\rho$ & $\widehat\sigma_a$ & $\widehat\sigma_z$ & $\widehat\si
 \subsection*{Interpretation}
 The strong positive sorting ($\rho \approx 0.89$--0.96) combined with firm heterogeneity dominating manager heterogeneity ($\sigma_a/\sigma_z \approx 10$) has several implications. First, sorting strength increased from 0.89 to 0.96 between the early 1990s and 2010s, indicating the CEO labor market became more efficient at matching managers to firms. By the 2010s, matching achieved near-optimal sorting, consistent with declining search frictions as the Hungarian economy matured.
 
-Second, the dominance of firm heterogeneity suggests firm-specific characteristics---technology, capital, market position---account for most revenue variation. CEO quality matters primarily through interaction with firm type rather than independently. This complements event study evidence showing modest causal effects of CEO transitions.
+Second, the dominance of firm heterogeneity suggests firm-specific characteristics---technology, capital, market position---account for most revenue variation. CEO quality matters primarily through interaction with firm type rather than independently. This complements event study evidence showing modest causal effects of CEO transitions on the same Hungarian data (7).
 
-% NOTE: Need to cite maximum 12 references total (PNAS limit)
-% Required citations: 
-% - Worker-firm correlation studies (max 3-4): AKM, Andrews et al., [1-2 more]
-% - CEO literature (max 3-4): Strategic management/corp finance on CEO effects/R-squared
-% - Gregory Clark genetics paper (path-length approach)
-% - Own work with Orbán and Telegdy (event study ~20% R-squared, 5-6% causal effects)
-% - Misallocation: Hsieh-Klenow classical papers (max 3 total)
-% TODO: Comment on fixed-effects approaches overestimating R-squared due to bias
-Third, our estimates of very strong positive sorting ($\rho \approx 0.89$--0.96) contrast sharply with worker-firm matching literature, where correlations are typically weak or negative (1). Andrews et al.\ (2) find negative assortative matching in German data after correcting for limited mobility bias, with correlations around $-0.1$ to $-0.2$. The difference likely reflects fundamental distinctions between CEO and worker labor markets: CEOs are scarce, high-skill workers whose productivity exhibits strong complementarity with firm capital; the CEO matching process involves intensive search with substantial information revelation; and CEOs capture a large share of match surplus through compensation negotiations, incentivizing efficient sorting.
+% NOTE: Current count: 7 references (under 12 PNAS limit)
+% Cited: AKM, Andrews, Choo-Siow, Clark, Graham, Rue-Held, Koren-Orban-Telegdy
+Third, our estimates of very strong positive sorting ($\rho \approx 0.89$--0.96) contrast sharply with worker-firm matching literature, where correlations are typically weak or negative (1). Andrews et al.\ (2) find negative assortative matching in German data after correcting for limited mobility bias, with correlations around $-0.1$ to $-0.2$. The difference likely reflects fundamental distinctions between CEO and worker labor markets: CEOs are scarce, high-skill workers whose productivity exhibits strong complementarity with firm capital; the CEO matching process involves intensive search with substantial information revelation; and CEOs capture a large share of match surplus through compensation negotiations, incentivizing efficient sorting. Our correlation estimates also align with the strong positive CEO-firm relationship documented using event study methods (7), though our approach avoids the bias inherent in fixed-effects estimators.
 
 \section*{Discussion}
 
@@ -276,13 +270,22 @@ For each three-year window, we implement the following steps:
 
 \textbf{Step 3:} Grid-search over $\sigma_\varepsilon^2 \in [0, \min(\widehat V - \widehat C_{\text{mm},2}, \widehat V - \widehat C_{\text{ff},2})]$ and for each candidate compute $\sigma_z^2(\sigma_\varepsilon^2) = \frac{\widehat V - \widehat C_{\text{mm},2} - \sigma_\varepsilon^2}{1 - \widehat\rho^2}$ and $\sigma_a^2(\sigma_\varepsilon^2) = \frac{\widehat V - \widehat C_{\text{ff},2} - \sigma_\varepsilon^2}{1 - \widehat\rho^2}$. Select $\sigma_\varepsilon^2$ minimizing squared deviation between observed and predicted sum of 2-step covariances.
 
-\subsection*{Data sources}
+\subsection*{Data sources and construction}
 
 % TODO: Specify data preprocessing steps:
 % - Remove year fixed effects from all log revenue observations
 % - Apply consistent demeaning to all variables
 % - Large sample size makes degrees of freedom corrections unnecessary
-Hungarian firm-CEO data come from the tax authority and cover 1992--2021. For each firm-year, we observe the registered CEO (person identifier) and annual revenue. We deflate nominal revenue using standard price indices. If a firm--manager relation spans multiple years within a window, we average log revenues.
+
+We combine two administrative datasets covering Hungarian firms from 1992--2021. The firm registry, maintained by corporate courts, tracks all registered executives authorized to represent companies, including CEOs and other officers with signatory authority. Each record spans a time interval, updating when positions change or identifiers are modified. The registry contains names, addresses, birthdates (from 2010), and mother's names (from 1999), with numerical identifiers available only from 2013 onward. The balance sheet dataset provides annual financial reports for all firms with double-entry bookkeeping, including revenue, employment, sector, and ownership structure. Together, these sources cover 1,063,172 firms yielding 9,627,484 firm-year observations before sample restrictions.
+
+Tracking individual CEOs across firms and time requires entity resolution. From 2013 forward, numerical identifiers enable direct linking. For earlier periods, we match records using names, addresses, mother's names, and birthdates to create unique person identifiers. Matching quality improves substantially after 1999 (when mother's name reporting begins) and 2010 (when birthdate reporting starts), though the 1990s data achieves reasonable coverage through name and address combinations.
+
+Identifying CEOs among registered representatives uses several heuristics. When explicit managing director titles exist, we apply them directly. For firms with three or fewer representatives, we assume all are CEOs. When more than three representatives are present, we assign CEO status based on continuity with previously identified CEOs at the same firm.
+
+We apply five sample restrictions. First, we exclude mining and finance sectors due to specialized accounting frameworks. Second, we drop firms ever having more than 2 simultaneous CEOs to avoid complex governance structures. Third, we remove firms with more than 10 CEO changes over the sample period to reduce noise from classification errors. Fourth, we exclude all state-owned enterprises, as their objectives differ from private businesses. Fifth, we exclude public firms, joint-stock companies, and cooperatives where governance structures differ from standard private corporations. We retain all private firms including nonemployer businesses, as single-person companies represent a substantial portion of the Hungarian corporate sector.
+
+The outcome $y_{im}$ is log real firm revenue (deflated using standard price indices) aggregated over each three-year window while manager $m$ is in office at firm $i$. If a firm--manager relation spans multiple years within a window, we average log revenues across years.
 
 \subsection*{Gaussian Markov random field formulation}
 
@@ -338,6 +341,11 @@ Identifying Social Interactions Through Conditional Variance Restrictions.
 H. Rue, L. Held, 
 \textit{Gaussian Markov Random Fields: Theory and Applications}. 
 (Chapman \& Hall/CRC, Boca Raton, FL, 2005).
+
+\bibitem{KorenOrbanTelegdy2025}
+M. Koren, K. Orbán, Á. Telegdy, 
+Debiasing Second Moments of Estimated CEO Effects: A Placebo-Controlled Approach. 
+Unpublished manuscript (2025).
 
 \end{thebibliography}
 
