@@ -232,8 +232,8 @@ The strong positive sorting ($\rho \approx 0.89$--0.96) combined with firm heter
 
 Second, the dominance of firm heterogeneity suggests firm-specific characteristics---technology, capital, market position---account for most revenue variation. CEO quality matters primarily through interaction with firm type rather than independently. This complements event study evidence showing modest causal effects of CEO transitions on the same Hungarian data (7).
 
-% NOTE: Current count: 7 references (under 12 PNAS limit)
-% Cited: AKM, Andrews, Choo-Siow, Clark, Graham, Rue-Held, Koren-Orban-Telegdy
+% NOTE: Current count: 8 references (under 12 PNAS limit)
+% Cited: AKM, Andrews, Choo-Siow, Clark, Graham, Rue-Held, Koren-Orban-Telegdy, Bonhomme-Manresa
 Third, our estimates of very strong positive sorting ($\rho \approx 0.89$--0.96) contrast sharply with worker-firm matching literature, where correlations are typically weak or negative (1). Andrews et al.\ (2) find negative assortative matching in German data after correcting for limited mobility bias, with correlations around $-0.1$ to $-0.2$. The difference likely reflects fundamental distinctions between CEO and worker labor markets: CEOs are scarce, high-skill workers whose productivity exhibits strong complementarity with firm capital; the CEO matching process involves intensive search with substantial information revelation; and CEOs capture a large share of match surplus through compensation negotiations, incentivizing efficient sorting. Our correlation estimates also align with the strong positive CEO-firm relationship documented using event study methods (7), though our approach avoids the bias inherent in fixed-effects estimators.
 
 \section*{Discussion}
@@ -295,6 +295,8 @@ This structure implies conditional independencies that follow the network: firm 
 
 The GMRF structure ensures that correlations decay exponentially with graph distance: the covariance between two firms (or managers) separated by $k$ edges in the bipartite graph is proportional to $\rho^k$. This exponential decay is the foundation of the path attenuation principle used for identification. The additive match-specific noise $\varepsilon_{ij}$, which is independent across matches and orthogonal to $(a,z)$, makes the observed outcome field non-Markovian while preserving the latent GMRF structure.
 
+Our continuous, network-based approach contrasts with discrete group models such as Bonhomme and Manresa (8), who handle high-dimensional heterogeneity through latent grouping. In their framework, individuals belong to discrete latent classes with common within-group parameters, and dependence arises only through group membership. Our GMRF formulation instead treats effects as continuous random variables with correlations structured by the mobility network topology. This enables topology-informed shrinkage where neighboring nodes in the network have correlated effects, rather than blockwise covariance across latent classes. Both approaches reduce dimensionality, but through fundamentally different mechanisms: discrete clustering versus continuous spatial smoothing over network structure.
+
 % TODO: Implement estimation with 6-step and 8-step moments for robustness
 % Use general pattern C_h = ρ^{h-2} C_2 to test model fit
 
@@ -346,6 +348,11 @@ H. Rue, L. Held,
 M. Koren, K. Orbán, Á. Telegdy, 
 Debiasing Second Moments of Estimated CEO Effects: A Placebo-Controlled Approach. 
 Unpublished manuscript (2025).
+
+\bibitem{BonhommeManresa2015}
+S. Bonhomme, E. Manresa, 
+Grouped Patterns of Heterogeneity in Panel Data. 
+\textit{Econometrica} \textbf{83}, 1147--1184 (2015).
 
 \end{thebibliography}
 
