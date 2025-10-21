@@ -11,37 +11,31 @@ all: setup data estimate paper
 
 # Setup project structure
 setup:
-	@echo "Setting up project structure..."
 	@mkdir -p input temp output
 	@mkdir -p code/simulate code/estimate code/create code/plot
-	@echo "Project structure ready."
 
 # Data processing pipeline
 data: setup temp/edgelist.csv
 
 # Create edgelist from Hungarian data via individual steps
-temp/edgelist.csv: temp/merged-panel.parquet src/create/edgelist.jl
+temp/edgelist.csv: temp/merged-panel.dta src/create/edgelist.jl
 	$(JULIA) src/create/edgelist.jl
 
-temp/merged-panel.parquet: temp/ceo-panel.parquet temp/balance.parquet src/create/merged-panel.jl
+temp/merged-panel.dta: temp/ceo-panel.dta temp/balance.dta src/create/merged-panel.jl
 	$(JULIA) src/create/merged-panel.jl
 
-temp/ceo-panel.parquet: src/create/ceo-panel.jl
+temp/ceo-panel.dta: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-panel.jl
 	$(JULIA) src/create/ceo-panel.jl
 
-temp/balance.parquet: src/create/balance.jl
+temp/balance.dta: input/merleg-LTS-2023/balance/balance_sheet_80_22.dta src/create/balance.jl
 	$(JULIA) src/create/balance.jl
 
 # Simulation (placeholder for future implementation)
 simulate: setup
-	@echo "Running agent-based simulation..."
-	@echo "Simulation module not yet implemented - this is a research framework."
 	@touch temp/simulation_results.csv
 
 # Estimation (placeholder for future implementation)  
 estimate: data
-	@echo "Running structural estimation..."
-	@echo "Estimation module not yet implemented - this is a research framework."
 	@touch temp/estimation_results.csv
 
 # Compile papers
@@ -52,24 +46,19 @@ paper-latex: paper
 
 # Watch LaTeX file and recompile on changes
 paper-watch:
-	@echo "Watching LaTeX sources..."
 	@while true; do \
 		inotifywait -e modify papers/random-effects/paper.tex 2>/dev/null || sleep 2; \
 		make paper; \
 	done
 
 papers/random-effects/paper.pdf: papers/random-effects/paper.tex lib/pnas-template/pnas-new.cls
-	@echo "Compiling PNAS LaTeX paper to PDF..."
 	cd papers/random-effects && TEXINPUTS=.:../../lib/pnas-template//:${TEXINPUTS} pdflatex -interaction=nonstopmode paper.tex
 	cd papers/random-effects && TEXINPUTS=.:../../lib/pnas-template//:${TEXINPUTS} pdflatex -interaction=nonstopmode paper.tex
-	@echo "Paper compiled successfully."
 
 # Clean temporary files
 clean:
-	@echo "Cleaning temporary files..."
 	rm -f papers/random-effects/paper.pdf papers/random-effects/*.aux papers/random-effects/*.log papers/random-effects/*.bbl papers/random-effects/*.blg papers/random-effects/*.out
 	rm -rf temp/*
-	@echo "Clean complete."
 
 # Show help
 help:

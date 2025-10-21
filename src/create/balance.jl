@@ -1,6 +1,4 @@
 using Kezdi
-using CSV
-using DataFrames
 
 # Load balance sheet data
 @use "input/merleg-LTS-2023/balance/balance_sheet_80_22.dta"
@@ -60,7 +58,4 @@ setdf(leftjoin(getdf(), df_temp, on=:frame_id_numeric))
 @generate lnY = log(value_added) 
 @generate lnL = log(employment)
 
-# Save the processed balance sheet data to Parquet
-using Parquet2
-df_balance_data = getdf()
-Parquet2.writefile("temp/balance.parquet", df_balance_data)
+@save "temp/balance.dta", replace

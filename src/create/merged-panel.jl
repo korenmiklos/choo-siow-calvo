@@ -5,11 +5,10 @@ using Dates
 using Parquet2
 
 # Load balance sheet data
-df_balance = Parquet2.readfile("temp/balance.parquet") |> DataFrame
-setdf(df_balance)
+df_balance = @use "temp/balance.dta"
 
 # Load CEO panel data
-df_ceo = Parquet2.readfile("temp/ceo-panel.parquet") |> DataFrame
+df_ceo = @use "temp/ceo-panel.dta"
 
 # Perform the merge
 setdf(leftjoin(df_balance, df_ceo, on=[:frame_id_numeric, :year], makeunique=true))
@@ -33,12 +32,9 @@ transform!(groupby(getdf(), :frame_id_numeric),
 
 # Apply filters
 @drop @if ceo_spell == 0  # No CEO
-const excluded_sectors = [2, 9]
-@drop @if sector ∈ excluded_sectors
+@drop @if sector ∈ [2, 9]
 
 # Keep only observations with valid CEO assignments
 @drop @if ismissing(person_id)
 
-# Save the merged panel to Parquet
-df_merged_panel = getdf()
-Parquet2.writefile("temp/merged-panel.parquet", df_merged_panel)
+@save "temp/merged-panel.dta", replace

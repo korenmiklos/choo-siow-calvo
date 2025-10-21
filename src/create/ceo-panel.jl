@@ -1,6 +1,4 @@
 using Kezdi
-using CSV
-using DataFrames
 
 # Load CEO panel data
 @use "input/manager-db-ceo-panel/ceo-panel.dta"
@@ -14,7 +12,4 @@ using DataFrames
 # Count CEOs per firm-year
 @egen n_ceo = rowcount(person_id), by(frame_id_numeric, year)
 
-# Save the processed CEO panel to Parquet
-using Parquet2
-df_ceo_panel = getdf()
-Parquet2.writefile("temp/ceo-panel.parquet", df_ceo_panel)
+@save "temp/ceo-panel.dta", replace
