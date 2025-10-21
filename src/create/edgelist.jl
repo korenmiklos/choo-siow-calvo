@@ -26,5 +26,4 @@ setdf(df_merged)
 
 # Export to CSV and Parquet
 df_final = getdf()
-CSV.write("temp/edgelist.csv", df_final)
 Parquet2.writefile("temp/edgelist.parquet", df_final)

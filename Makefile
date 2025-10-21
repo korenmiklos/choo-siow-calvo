@@ -16,13 +16,13 @@ setup:
 	@mkdir -p code/simulate code/estimate code/create code/plot
 
 # Data processing pipeline
-data: setup temp/edgelist.csv
+data: setup temp/edgelist.parquet temp/large_component_managers.csv
 
 # Create edgelist from Hungarian data via individual steps
-temp/edgelist.csv: temp/merged-panel.dta src/create/edgelist.jl
+temp/edgelist.parquet: temp/merged-panel.parquet src/create/edgelist.jl
 	$(JULIA) src/create/edgelist.jl
 
-temp/merged-panel.dta: temp/ceo-panel.parquet temp/balance.parquet src/create/merged-panel.jl
+temp/merged-panel.parquet: temp/ceo-panel.parquet temp/balance.parquet src/create/merged-panel.jl
 	$(JULIA) src/create/merged-panel.jl
 
 temp/ceo-panel.parquet: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-panel.sql
@@ -30,6 +30,10 @@ temp/ceo-panel.parquet: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-
 
 temp/balance.parquet: input/merleg-LTS-2023-patch/balance/balance_sheet_80_22.dta src/create/balance.sql
 	$(DUCKDB) < src/create/balance.sql
+
+# Find connected components in manager network
+temp/large_component_managers.csv: temp/edgelist.parquet src/create/connected_component.jl
+	$(JULIA) src/create/connected_component.jl
 
 # Simulation (placeholder for future implementation)
 simulate: setup

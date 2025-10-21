@@ -14,8 +14,13 @@ df_ceo = Parquet2.readfile("temp/ceo-panel.parquet") |> DataFrame
 # Perform the merge
 setdf(leftjoin(df_balance, df_ceo, on=[:frame_id_numeric, :year], makeunique=true))
 
+# Keep only observations with valid CEO assignments
+@drop @if ismissing(person_id) 
+@drop @if ismissing(frame_id_numeric)
+@drop @if ismissing(year)
+
 # Identify first time for each CEO-firm pair
-@egen first_time = minimum(year) @if !ismissing(person_id), by(frame_id_numeric, person_id)
+@egen first_time = minimum(year), by(frame_id_numeric, person_id)
 
 # Mark new CEO entries
 @generate has_new_ceo = (first_time == year)
@@ -33,9 +38,8 @@ transform!(groupby(getdf(), :frame_id_numeric),
 
 # Apply filters
 @drop @if ceo_spell == 0  # No CEO
-@drop @if sector ∈ [2, 9]
+# use Ref() to avoid broadcasting over the RHS vector
+@drop @if sector ∈ Ref([2, 9])
 
-# Keep only observations with valid CEO assignments
-@drop @if ismissing(person_id)
-
-@save "temp/merged-panel.dta", replace
+df = getdf()
+Parquet2.writefile("temp/merged-panel.parquet", df)

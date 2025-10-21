@@ -66,9 +66,9 @@ SELECT
     b.foreign_owned,
     s.sector,
     b.sales - b.personnel_expenses - b.materials AS value_added,
-    LN(b.sales) AS lnR,
-    LN(b.sales - b.personnel_expenses - b.materials) AS lnY,
-    LN(b.employment) AS lnL
+    CASE WHEN b.sales > 0 THEN LN(b.sales) ELSE NULL END AS lnR,
+    CASE WHEN b.sales - b.personnel_expenses - b.materials > 0 THEN LN(b.sales - b.personnel_expenses - b.materials) ELSE NULL END AS lnY,
+    CASE WHEN b.employment > 0 THEN LN(b.employment) ELSE NULL END AS lnL
 FROM balance_raw b
 LEFT JOIN sector_mode s ON b.frame_id_numeric = s.frame_id_numeric;
 

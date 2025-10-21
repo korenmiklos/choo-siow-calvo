@@ -253,11 +253,40 @@ Results compile to professional reports using Typst:
 
 Results integrate with the broader project workflow:
 - **Input data** from `input/` folder managed by `bead`
-- **Simulation code** in `code/simulate/` subfolder
-- **Estimation routines** in `code/estimate/` subfolder  
+- **Data processing** in `src/create/` using DuckDB SQL and Julia
+- **Simulation code** in `code/simulate/` subfolder (placeholder)
+- **Estimation routines** in `code/estimate/` subfolder (placeholder)
 - **Final outputs** to `output/` folder for computational results
 - **Research papers** in `papers/` subfolder with separate folders per paper
-- **Temporary files** (large simulation datasets) in `temp/`
+- **Temporary files** (intermediate datasets) in `temp/`
+
+### Data Processing Pipeline
+
+The project uses a multi-stage data processing pipeline orchestrated by Make:
+
+**Stage 1: Raw Data Processing (DuckDB SQL)**
+- `src/create/ceo-panel.sql`: Processes CEO panel data, filters by year range (1992-2022), computes CEO counts per firm-year
+- `src/create/balance.sql`: Processes balance sheet data, applies industry classification, computes sector mode within firm, generates log-transformed variables (lnR, lnY, lnL)
+- Outputs: `temp/ceo-panel.parquet`, `temp/balance.parquet`
+- DuckDB provides reliable Stata file reading via the `read_stat` community extension
+
+**Stage 2: Panel Merging (Julia/Kezdi)**
+- `src/create/merged-panel.jl`: Merges CEO and balance data, identifies CEO spells using cumulative sum of new CEO indicators, applies sample filters (excludes mining and finance sectors)
+- Output: `temp/merged-panel.parquet`
+
+**Stage 3: Edgelist Construction (Julia/Kezdi)**
+- `src/create/edgelist.jl`: Collapses to unique manager-firm pairs, computes spell lengths and time-averaged outcomes
+- Outputs: `temp/edgelist.parquet`, `temp/edgelist.csv`
+
+**Stage 4: Network Analysis (Julia)**
+- `src/create/connected_component.jl`: Projects bipartite manager-firm graph to manager-manager network, identifies large connected components (≥30 nodes), outputs component membership
+- Output: `temp/large_component_managers.csv`
+
+**Technology Stack**:
+- DuckDB 1.2+ for Stata file reading and SQL transformations
+- Julia 1.10+ with Kezdi.jl for data manipulation and Parquet2.jl for columnar storage
+- Graphs.jl and SparseArrays.jl for network analysis
+- Make for dependency tracking and incremental builds
 
 ## Papers
 
