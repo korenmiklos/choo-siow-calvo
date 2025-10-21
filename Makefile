@@ -1,10 +1,10 @@
 # Dynamic Manager-Firm Matching Model
 # Makefile for complete workflow
 
-.PHONY: all setup simulate estimate paper clean help
+.PHONY: all setup data edgelist simulate estimate paper clean help
 
 # Default target - complete workflow
-all: setup simulate estimate paper
+all: setup data estimate paper
 
 # Setup project structure
 setup:
@@ -13,6 +13,27 @@ setup:
 	@mkdir -p code/simulate code/estimate code/create code/plot
 	@echo "Project structure ready."
 
+# Data processing pipeline
+data: setup temp/edgelist.csv
+
+# Create edgelist from Hungarian data
+temp/edgelist.csv: src/create/run_all.jl
+	@echo "Processing Hungarian CEO-firm data..."
+	julia --project=. src/create/run_all.jl
+
+# Alternative: run individual steps
+ceo-panel: setup
+	julia --project=. src/create/ceo-panel.jl
+
+balance: setup  
+	julia --project=. src/create/balance.jl
+
+merge: ceo-panel balance
+	julia --project=. src/create/merged-panel.jl
+
+edgelist: merge
+	julia --project=. src/create/edgelist.jl
+
 # Simulation (placeholder for future implementation)
 simulate: setup
 	@echo "Running agent-based simulation..."
@@ -20,7 +41,7 @@ simulate: setup
 	@touch temp/simulation_results.csv
 
 # Estimation (placeholder for future implementation)  
-estimate: simulate
+estimate: data
 	@echo "Running structural estimation..."
 	@echo "Estimation module not yet implemented - this is a research framework."
 	@touch temp/estimation_results.csv
@@ -58,13 +79,20 @@ help:
 	@echo "=================================="
 	@echo ""
 	@echo "Available targets:"
-	@echo "  all       - Run complete workflow (setup + simulate + estimate + paper)"
+	@echo "  all       - Run complete workflow (setup + data + estimate + paper)"
 	@echo "  setup     - Create project directory structure"
+	@echo "  data      - Process Hungarian CEO-firm data to create edgelist"
+	@echo "  edgelist  - Create manager-firm edgelist with spell lengths"
 	@echo "  simulate  - Run agent-based simulation (placeholder)"
 	@echo "  estimate  - Run structural estimation (placeholder)"
 	@echo "  paper     - Compile papers/random-effects/paper.tex to PDF using pdflatex"
 	@echo "  clean     - Remove temporary files"
 	@echo "  help      - Show this help"
+	@echo ""
+	@echo "Individual data processing steps:"
+	@echo "  ceo-panel - Process CEO panel data"
+	@echo "  balance   - Process balance sheet data"
+	@echo "  merge     - Merge CEO and balance data"
 	@echo ""
 	@echo "Data dependencies managed by bead:"
 	@echo "  bead input list    - Show available datasets"
