@@ -5,6 +5,7 @@
 
 # Julia command with project environment
 JULIA := julia --project=.
+DUCKDB := duckdb
 
 # Default target - complete workflow
 all: setup data estimate paper
@@ -21,14 +22,14 @@ data: setup temp/edgelist.csv
 temp/edgelist.csv: temp/merged-panel.dta src/create/edgelist.jl
 	$(JULIA) src/create/edgelist.jl
 
-temp/merged-panel.dta: temp/ceo-panel.dta temp/balance.dta src/create/merged-panel.jl
+temp/merged-panel.dta: temp/ceo-panel.parquet temp/balance.parquet src/create/merged-panel.jl
 	$(JULIA) src/create/merged-panel.jl
 
-temp/ceo-panel.dta: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-panel.jl
-	$(JULIA) src/create/ceo-panel.jl
+temp/ceo-panel.parquet: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-panel.sql
+	$(DUCKDB) < src/create/ceo-panel.sql
 
-temp/balance.dta: input/merleg-LTS-2023/balance/balance_sheet_80_22.dta src/create/balance.jl
-	$(JULIA) src/create/balance.jl
+temp/balance.parquet: input/merleg-LTS-2023-patch/balance/balance_sheet_80_22.dta src/create/balance.sql
+	$(DUCKDB) < src/create/balance.sql
 
 # Simulation (placeholder for future implementation)
 simulate: setup

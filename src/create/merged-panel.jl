@@ -5,10 +5,11 @@ using Dates
 using Parquet2
 
 # Load balance sheet data
-df_balance = @use "temp/balance.dta"
+df_balance = Parquet2.readfile("temp/balance.parquet") |> DataFrame
+setdf(df_balance)
 
 # Load CEO panel data
-df_ceo = @use "temp/ceo-panel.dta"
+df_ceo = Parquet2.readfile("temp/ceo-panel.parquet") |> DataFrame
 
 # Perform the merge
 setdf(leftjoin(df_balance, df_ceo, on=[:frame_id_numeric, :year], makeunique=true))
