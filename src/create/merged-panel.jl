@@ -2,14 +2,14 @@ using Kezdi
 using CSV
 using DataFrames
 using Dates
+using Parquet2
 
 # Load balance sheet data
-@use "temp/balance.dta"
+df_balance = Parquet2.readfile("temp/balance.parquet") |> DataFrame
+setdf(df_balance)
 
-# Merge with CEO panel data
-df_balance = getdf()
-@use "temp/ceo-panel.dta", clear
-df_ceo = getdf()
+# Load CEO panel data
+df_ceo = Parquet2.readfile("temp/ceo-panel.parquet") |> DataFrame
 
 # Perform the merge
 setdf(leftjoin(df_balance, df_ceo, on=[:frame_id_numeric, :year], makeunique=true))
@@ -90,5 +90,6 @@ transform!(groupby(getdf(), :frame_id_numeric),
 # Keep only observations with valid CEO assignments
 @drop @if ismissing(person_id)
 
-# Save the merged panel
-@save "temp/merged-panel.dta", replace
+# Save the merged panel to Parquet
+df_merged_panel = getdf()
+Parquet2.writefile("temp/merged-panel.parquet", df_merged_panel)

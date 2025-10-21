@@ -37,5 +37,7 @@ median_age_at_entry = median(df_temp.age_at_entry)
 # Count CEOs per firm-year
 @egen n_ceo = rowcount(person_id), by(frame_id_numeric, year)
 
-# Save the processed CEO panel
-@save "temp/ceo-panel.dta", replace
+# Save the processed CEO panel to Parquet
+using Parquet2
+df_ceo_panel = getdf()
+Parquet2.writefile("temp/ceo-panel.parquet", df_ceo_panel)

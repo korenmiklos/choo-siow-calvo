@@ -3,6 +3,9 @@
 
 .PHONY: all setup data edgelist simulate estimate paper clean help
 
+# Julia command with project environment
+JULIA := julia --project=.
+
 # Default target - complete workflow
 all: setup data estimate paper
 
@@ -19,20 +22,20 @@ data: setup temp/edgelist.csv
 # Create edgelist from Hungarian data
 temp/edgelist.csv: src/create/run_all.jl
 	@echo "Processing Hungarian CEO-firm data..."
-	julia --project=. src/create/run_all.jl
+	$(JULIA) src/create/run_all.jl
 
 # Alternative: run individual steps
 ceo-panel: setup
-	julia --project=. src/create/ceo-panel.jl
+	$(JULIA) src/create/ceo-panel.jl
 
 balance: setup  
-	julia --project=. src/create/balance.jl
+	$(JULIA) src/create/balance.jl
 
 merge: ceo-panel balance
-	julia --project=. src/create/merged-panel.jl
+	$(JULIA) src/create/merged-panel.jl
 
 edgelist: merge
-	julia --project=. src/create/edgelist.jl
+	$(JULIA) src/create/edgelist.jl
 
 # Simulation (placeholder for future implementation)
 simulate: setup

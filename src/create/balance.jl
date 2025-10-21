@@ -37,5 +37,7 @@ const min_employment = 1
 @replace employment = min_employment @if employment < min_employment
 @replace employment = floor(Int, employment)
 
-# Save the processed balance sheet data
-@save "temp/balance.dta", replace
+# Save the processed balance sheet data to Parquet
+using Parquet2
+df_balance_data = getdf()
+Parquet2.writefile("temp/balance.parquet", df_balance_data)

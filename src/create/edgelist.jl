@@ -1,9 +1,11 @@
 using Kezdi
 using CSV
 using DataFrames
+using Parquet2
 
 # Load the merged panel data
-@use "temp/merged-panel.dta"
+df_merged = Parquet2.readfile("temp/merged-panel.parquet") |> DataFrame
+setdf(df_merged)
 
 # Calculate spell length for each person-firm pair
 # First, calculate the tenure for each observation
@@ -22,16 +24,7 @@ using DataFrames
 # Select and order the columns for the edgelist
 @keep frame_id_numeric person_id T lnR lnY lnL
 
-# Export to CSV
+# Export to CSV and Parquet
 df_final = getdf()
 CSV.write("temp/edgelist.csv", df_final)
-
-# Also save as .dta for compatibility
-@save "temp/edgelist.dta", replace
-
-# Print summary statistics
-println("\nEdgelist created with $(nrow(df_final)) manager-firm pairs")
-println("\nSummary of spell lengths:")
-describe(df_final.T)
-println("\nFirst few rows:")
-println(first(df_final, 10))
+Parquet2.writefile("temp/edgelist.parquet", df_final)
