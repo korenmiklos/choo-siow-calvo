@@ -2,16 +2,11 @@ using Kezdi
 using CSV
 using DataFrames
 
-# BALANCE SHEET DATA PARAMETERS
-const start_year = 1992
-const end_year = 2022
-const min_employment = 1
-
 # Load balance sheet data
 @use "input/merleg-LTS-2023/balance/balance_sheet_80_22.dta"
 
 # Filter by year range
-@keep @if year >= start_year && year <= end_year
+@keep @if year >= 1992 && year <= 2022
 @drop @if frame_id == "only_originalid"
 
 # Generate numeric frame ID from string ID
@@ -34,8 +29,36 @@ const min_employment = 1
 @mvencode sales export employment tangible_assets materials wagebill personnel_expenses intangible_assets state_owned foreign_owned, mv(0)
 
 # Apply minimum employment threshold
-@replace employment = min_employment @if employment < min_employment
+@replace employment = 1 @if employment < 1
 @replace employment = floor(Int, employment)
+
+# Apply industry classification
+@generate sector = missing
+@replace sector = 1 @if teaor08_1d == "A"  # Agriculture
+@replace sector = 2 @if teaor08_1d == "B"  # Mining
+@replace sector = 3 @if teaor08_1d == "C"  # Manufacturing  
+@replace sector = 4 @if teaor08_1d ∈ ["G", "H"]  # Wholesale, Retail, Transportation
+@replace sector = 5 @if teaor08_1d ∈ ["J", "M"]  # Telecom and Business Services
+@replace sector = 9 @if teaor08_1d == "K"  # Finance
+@replace sector = 6 @if teaor08_1d == "F"  # Construction
+@replace sector = 7 @if ismissing(sector)  # Nontradable services
+
+# Make sector constant within firm (use mode)
+df_temp = @with getdf() begin
+    @collapse sector_mode = mode(sector), by(frame_id_numeric)
+end
+setdf(leftjoin(getdf(), df_temp, on=:frame_id_numeric))
+@replace sector = sector_mode
+@drop sector_mode
+
+# Generate key variables
+# Value added approximation
+@generate value_added = sales - personnel_expenses - materials
+
+# Log transformations
+@generate lnR = log(sales)
+@generate lnY = log(value_added) 
+@generate lnL = log(employment)
 
 # Save the processed balance sheet data to Parquet
 using Parquet2

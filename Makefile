@@ -19,23 +19,18 @@ setup:
 # Data processing pipeline
 data: setup temp/edgelist.csv
 
-# Create edgelist from Hungarian data
-temp/edgelist.csv: src/create/run_all.jl
-	@echo "Processing Hungarian CEO-firm data..."
-	$(JULIA) src/create/run_all.jl
+# Create edgelist from Hungarian data via individual steps
+temp/edgelist.csv: temp/merged-panel.parquet src/create/edgelist.jl
+	$(JULIA) src/create/edgelist.jl
 
-# Alternative: run individual steps
-ceo-panel: setup
-	$(JULIA) src/create/ceo-panel.jl
-
-balance: setup  
-	$(JULIA) src/create/balance.jl
-
-merge: ceo-panel balance
+temp/merged-panel.parquet: temp/ceo-panel.parquet temp/balance.parquet src/create/merged-panel.jl
 	$(JULIA) src/create/merged-panel.jl
 
-edgelist: merge
-	$(JULIA) src/create/edgelist.jl
+temp/ceo-panel.parquet: src/create/ceo-panel.jl
+	$(JULIA) src/create/ceo-panel.jl
+
+temp/balance.parquet: src/create/balance.jl
+	$(JULIA) src/create/balance.jl
 
 # Simulation (placeholder for future implementation)
 simulate: setup
