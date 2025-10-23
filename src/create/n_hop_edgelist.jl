@@ -57,7 +57,6 @@ zero_diag!(PF); zero_diag!(PM)
 # PURE even-n hops via ALTERNATING products (SYMMETRIZED)
 # mm-style: start with PF; ff-style: start with PM.
 # At each even n, raw(n) := (alternating product) > 0; then SYMMETRIZE: raw := raw .| raw'
-# PURE(n) = raw(n) \ (union of raw(2), raw(4), ..., raw(n-2)).
 function pure_even_hops_alternating(PF::SparseMatrixCSC{Int,Int},
                                     PM::SparseMatrixCSC{Int,Int},
                                     max_n_even::Int; start::Symbol)
