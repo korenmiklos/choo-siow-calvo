@@ -28,11 +28,18 @@ This project develops an agent-based simulation and structural estimation framew
 ## Repository Structure
 
 ```
-├── code/               # Organized by purpose
-│   ├── simulate/      # Agent-based simulation engine
-│   ├── estimate/      # Structural estimation routines
-│   ├── create/        # Data creation and manipulation
-│   └── plot/          # Visualization and reporting
+├── src/
+│   └── create/        # Data processing scripts
+│       ├── ceo-panel.sql         # CEO panel processing (DuckDB)
+│       ├── balance.sql           # Balance sheet processing (DuckDB)
+│       ├── merged-panel.jl       # Merge CEO and balance data (Julia/Kezdi)
+│       ├── edgelist.jl           # Create manager-firm edgelist (Julia/Kezdi)
+│       └── connected_component.jl # Network component analysis (Julia)
+├── code/              # Organized by purpose
+│   ├── simulate/      # Agent-based simulation engine (placeholder)
+│   ├── estimate/      # Structural estimation routines (placeholder)
+│   ├── create/        # Data creation and manipulation (placeholder)
+│   └── plot/          # Visualization and reporting (placeholder)
 ├── docs/              # Research documentation and notes
 │   ├── choo-siow-framework-notes.md
 │   ├── steady-state-switching-dynamics.md
@@ -53,13 +60,18 @@ This project develops an agent-based simulation and structural estimation framew
 - **Make**: Workflow automation (all targets runnable from root)
 - **Bead**: Data dependency management (`bead input load <name>`)
 - **Git**: Version control with appropriate .gitignore
-- **LaTeX**: TeX Live 2024 with pdflatex and bibtex for paper compilation
+- **DuckDB 1.2+**: Stata file reading and SQL transformations (uses `read_stat` community extension)
+- **Julia 1.10+**: Data manipulation and network analysis
+  - Kezdi.jl: Data manipulation with Stata-like syntax
+  - Parquet2.jl: Columnar storage format
+  - Graphs.jl: Network analysis
+  - SparseArrays.jl: Efficient graph representations
+  - CSV.jl, DataFrames.jl: Standard data operations
+- **LaTeX**: TeX Live 2024 with pdflatex for paper compilation
 
 ### Optional Tools (for future implementation)
 
-- **Julia 1.10+**: High-performance simulation and numerical methods
-- **Python 3.11+**: Data analysis with `uv` package management, prefer `polars` over pandas
-- **DuckDB 1.2**: Large-scale data processing via SQL
+- **Python 3.11+**: Additional analysis with `uv` package management, prefer `polars` over pandas
 - **Stata 18**: Traditional econometric analysis with .do files
 
 ## Usage
@@ -75,12 +87,37 @@ make all
 
 ```bash
 make setup      # Create directory structure
+make data       # Process Hungarian CEO-firm data to create edgelist
 make simulate   # Run agent-based simulation (placeholder)
 make estimate   # Structural parameter estimation (placeholder)
 make paper      # Compile research paper to PDF
 make clean      # Remove temporary files
 make help       # Show all available targets
 ```
+
+### Data Processing Pipeline
+
+The data processing pipeline is orchestrated by Make with dependency tracking:
+
+```bash
+# Stage 1: Raw data processing (DuckDB SQL)
+make temp/ceo-panel.parquet    # Process CEO panel data
+make temp/balance.parquet      # Process balance sheet data
+
+# Stage 2: Merge and filter (Julia/Kezdi)
+make temp/merged-panel.parquet # Merge CEO and balance data
+
+# Stage 3: Create edgelist (Julia/Kezdi)
+make temp/edgelist.parquet     # Collapse to manager-firm pairs
+
+# Stage 4: Network analysis (Julia)
+make temp/large_component_managers.csv  # Find connected components
+```
+
+**Pipeline Details**:
+1. **DuckDB SQL** (`src/create/*.sql`): Reads Stata files via `read_stat` extension, applies filters, computes derived variables, outputs Parquet files
+2. **Julia/Kezdi** (`src/create/*.jl`): Merges datasets, identifies CEO spells, collapses to edgelist format, performs network projection
+3. **Make**: Tracks file dependencies and runs only necessary steps when inputs change
 
 ### Data Management
 
@@ -101,6 +138,11 @@ bead input update <name>  # Update existing datasets
 - [x] Project organization and workflow automation
 - [x] Git repository with proper .gitignore
 - [x] Makefile with complete workflow targets
+- [x] **Data processing pipeline**
+  - [x] DuckDB SQL scripts for Stata file reading and data cleaning
+  - [x] Julia/Kezdi scripts for merging and edgelist creation
+  - [x] Network analysis for connected components
+  - [x] Parquet format for efficient intermediate storage
 
 ### Research Framework (Planned Implementation)
 
@@ -116,9 +158,8 @@ bead input update <name>  # Update existing datasets
   - [ ] Bootstrap standard errors and model validation
   - [ ] Comparative statics and policy experiments
 
-- [ ] **Data analysis pipeline**
+- [ ] **Extended data analysis**
   - [ ] Synthetic data generation for Monte Carlo validation
-  - [ ] Integration with administrative datasets
   - [ ] Robustness checks and sensitivity analysis
 
 ## Model Specification
