@@ -1,12 +1,12 @@
-using CSV, DataFrames, SparseArrays, Random, StatsBase
+using CSV, DataFrames, SparseArrays, Random, StatsBase, Parquet2
 
 # I/O
-const IN_EDGELIST = "temp/edgelist.csv"   # columns: frame_id_numeric, person_id, T, lnR, lnY, lnL
+const IN_EDGELIST = "temp/edgelist.parquet"   # columns: frame_id_numeric, person_id, T, lnR, lnY, lnL
 const OUT_DIR     = "temp"
 const MAX_N       = 4                     # even only: 2,4,6,...,MAX_N
 
 # Load & checks
-df = CSV.read(IN_EDGELIST, DataFrame)
+df = Parquet2.readfile(IN_EDGELIST) |> DataFrame
 
 # If random sample desired to speed up computation, uncomment below:
 # rng = MersenneTwister(123456)  # reproducible
