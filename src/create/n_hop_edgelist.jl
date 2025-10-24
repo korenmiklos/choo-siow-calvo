@@ -64,8 +64,8 @@ function build_edge_profile(df::DataFrame)
 end
 const EDGE = build_edge_profile(df)
 
-@inline function edge_vals(pid::Int, fid::Int)
-    get(EDGE, (pid, fid), (T=missing, lnR=missing, lnY=missing, lnL=missing))
+@inline function edge_vals(pid, fid)
+    get(EDGE, (Int(pid), Int(fid)), (T=missing, lnR=missing, lnY=missing, lnL=missing))
 end
 
 # Precompute neighbor lists from CSC internals
