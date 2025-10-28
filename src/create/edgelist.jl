@@ -1,6 +1,4 @@
 using Kezdi
-using CSV
-using DataFrames
 using Parquet2
 
 # Load the merged panel data
@@ -14,9 +12,18 @@ setdf(df_merged)
 @egen spell_end = maximum(year), by(frame_id_numeric, person_id)
 @generate T = spell_end - spell_start + 1
 
+# The network code has no sense of time, remove time effects by demeaning lnR, lnY, lnL by year 
+@egen lnR_mean = mean(lnR), by(year)
+@egen lnY_mean = mean(lnY), by(year)
+@egen lnL_mean = mean(lnL), by(year)
+
+@replace lnR = lnR - lnR_mean
+@replace lnY = lnY - lnY_mean
+@replace lnL = lnL - lnL_mean
+
 # Create unique person-firm pairs with their characteristics
 # Keep one observation per person-firm pair with averages
-@collapse T = mean(T) lnR = mean(lnR) lnY = mean(lnY) lnL = mean(lnL), by(frame_id_numeric, person_id)
+@collapse T = mean(T) lnR = mean(lnR) lnY = mean(lnY) lnL = mean(lnL) spell_start = minimum(year) spell_end = maximum(year), by(frame_id_numeric, person_id)
 
 # Drop any observations with missing values in key variables
 @drop @if ismissing(lnR) || ismissing(lnY) || ismissing(lnL)
