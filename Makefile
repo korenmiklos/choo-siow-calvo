@@ -1,71 +1,46 @@
-# Dynamic Manager-Firm Matching Model
-# Makefile for complete workflow
+.PHONY: all setup data simulate estimate paper clean
 
-.PHONY: all setup simulate estimate paper clean help
+JULIA := julia --project=.
+DUCKDB := duckdb
 
-# Default target - complete workflow
-all: setup simulate estimate paper
+all: setup data estimate paper
 
-# Setup project structure
 setup:
-	@echo "Setting up project structure..."
-	@mkdir -p input temp output
-	@mkdir -p code/simulate code/estimate code/create code/plot
-	@echo "Project structure ready."
+	mkdir -p input temp output
+	mkdir -p code/simulate code/estimate code/create code/plot
 
-# Simulation (placeholder for future implementation)
+data: setup temp/edgelist.parquet temp/large_component_managers.csv temp/mm_pure_2hop.csv temp/ff_pure_2hop.csv
+
+temp/edgelist.parquet: temp/merged-panel.parquet src/create/edgelist.jl
+	$(JULIA) src/create/edgelist.jl
+
+temp/merged-panel.parquet: temp/ceo-panel.parquet temp/balance.parquet src/create/merged-panel.jl
+	$(JULIA) src/create/merged-panel.jl
+
+temp/ceo-panel.parquet: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-panel.sql
+	$(DUCKDB) < src/create/ceo-panel.sql
+
+temp/balance.parquet: input/merleg-LTS-2023-patch/balance/balance_sheet_80_22.dta src/create/balance.sql
+	$(DUCKDB) < src/create/balance.sql
+
+temp/large_component_managers.csv: temp/edgelist.parquet src/create/connected_component.jl
+	$(JULIA) src/create/connected_component.jl
+
+temp/mm_pure_2hop.csv temp/ff_pure_2hop.csv: temp/edgelist.parquet src/create/n_hop_edgelist.jl
+	$(JULIA) src/create/n_hop_edgelist.jl
+
 simulate: setup
-	@echo "Running agent-based simulation..."
-	@echo "Simulation module not yet implemented - this is a research framework."
-	@touch temp/simulation_results.csv
+	touch temp/simulation_results.csv
 
-# Estimation (placeholder for future implementation)  
-estimate: simulate
-	@echo "Running structural estimation..."
-	@echo "Estimation module not yet implemented - this is a research framework."
-	@touch temp/estimation_results.csv
+estimate: data
+	touch temp/estimation_results.csv
 
-# Compile papers
 paper: papers/random-effects/paper.pdf
 
-# Alias for clarity
-paper-latex: paper
-
-# Watch LaTeX file and recompile on changes
-paper-watch:
-	@echo "Watching LaTeX sources..."
-	@while true; do \
-		inotifywait -e modify papers/random-effects/paper.tex 2>/dev/null || sleep 2; \
-		make paper; \
-	done
-
 papers/random-effects/paper.pdf: papers/random-effects/paper.tex lib/pnas-template/pnas-new.cls
-	@echo "Compiling PNAS LaTeX paper to PDF..."
 	cd papers/random-effects && TEXINPUTS=.:../../lib/pnas-template//:${TEXINPUTS} pdflatex -interaction=nonstopmode paper.tex
 	cd papers/random-effects && TEXINPUTS=.:../../lib/pnas-template//:${TEXINPUTS} pdflatex -interaction=nonstopmode paper.tex
-	@echo "Paper compiled successfully."
 
-# Clean temporary files
 clean:
-	@echo "Cleaning temporary files..."
 	rm -f papers/random-effects/paper.pdf papers/random-effects/*.aux papers/random-effects/*.log papers/random-effects/*.bbl papers/random-effects/*.blg papers/random-effects/*.out
 	rm -rf temp/*
-	@echo "Clean complete."
-
-# Show help
-help:
-	@echo "Dynamic Manager-Firm Matching Model"
-	@echo "=================================="
-	@echo ""
-	@echo "Available targets:"
-	@echo "  all       - Run complete workflow (setup + simulate + estimate + paper)"
-	@echo "  setup     - Create project directory structure"
-	@echo "  simulate  - Run agent-based simulation (placeholder)"
-	@echo "  estimate  - Run structural estimation (placeholder)"
-	@echo "  paper     - Compile papers/random-effects/paper.tex to PDF using pdflatex"
-	@echo "  clean     - Remove temporary files"
-	@echo "  help      - Show this help"
-	@echo ""
-	@echo "Data dependencies managed by bead:"
-	@echo "  bead input list    - Show available datasets"
-	@echo "  bead input load    - Load missing datasets"
