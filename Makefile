@@ -9,7 +9,7 @@ setup:
 	mkdir -p input temp output
 	mkdir -p code/simulate code/estimate code/create code/plot
 
-data: setup temp/edgelist.parquet temp/large_component_managers.csv temp/mm_pure_2hop.csv temp/ff_pure_2hop.csv
+data: setup temp/edgelist.parquet temp/large_component_managers.parquet temp/mm_pure_2hop.csv temp/ff_pure_2hop.csv
 
 temp/edgelist.parquet: temp/merged-panel.parquet src/create/edgelist.jl
 	$(JULIA) src/create/edgelist.jl
@@ -23,7 +23,7 @@ temp/ceo-panel.parquet: input/manager-db-ceo-panel/ceo-panel.dta src/create/ceo-
 temp/balance.parquet: input/merleg-LTS-2023-patch/balance/balance_sheet_80_22.dta src/create/balance.sql
 	$(DUCKDB) < src/create/balance.sql
 
-temp/large_component_managers.csv: temp/edgelist.parquet src/create/connected_component.jl
+temp/large_component_managers.parquet: temp/edgelist.parquet src/create/connected_component.jl
 	$(JULIA) src/create/connected_component.jl
 
 temp/mm_pure_2hop.csv temp/ff_pure_2hop.csv: temp/edgelist.parquet src/create/n_hop_edgelist.jl

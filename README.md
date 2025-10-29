@@ -111,7 +111,7 @@ make temp/merged-panel.parquet # Merge CEO and balance data
 make temp/edgelist.parquet     # Collapse to manager-firm pairs
 
 # Stage 4: Network analysis (Julia)
-make temp/large_component_managers.csv  # Find connected components
+make temp/large_component_managers.parquet  # Find connected components
 ```
 
 **Pipeline Details**:

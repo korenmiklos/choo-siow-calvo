@@ -1,4 +1,4 @@
-using CSV, DataFrames
+using DataFrames, Parquet2
 using SparseArrays, Graphs, Random
 using LinearAlgebra
 
@@ -18,24 +18,41 @@ end
 
 # --- I/O --- #
 
-function read_edgelist(path::String, source_col::String, target_col::String)::BipartiteGraph
-    df = CSV.read(path, DataFrame; header=true)
-    # Drop rows with missing person_id
-    df = df[.!ismissing.(df[!, target_col]), :]
-    return BipartiteGraph(Vector{Int}(df[!, source_col]), Vector{Int}(df[!, target_col]))
-end
-
-function write_edgelist_csv(path::String, sources::Vector{Int}, targets::Vector{Int})
-    open(path, "w") do io
-        for (s, t) in zip(sources, targets)
-            println(io, "$s,$t")
+function resolve_column(df::DataFrame, name::AbstractString)::Symbol
+    for col in names(df)
+        if String(col) == name
+            return Symbol(col)
         end
     end
+    error("Column $(name) not found in DataFrame")
 end
 
-function write_component_csv(path::String, person_ids::Vector{Int}, component_ids::Vector{Int}, sizes::Vector{Int})
+function read_edgelist_parquet(path::String, source_col::String, target_col::String)::BipartiteGraph
+    df = Parquet2.readfile(path) |> DataFrame
+    source_key = resolve_column(df, source_col)
+    target_key = resolve_column(df, target_col)
+
+    # Drop rows with missing person_id
+    df = df[.!ismissing.(df[!, target_key]), :]
+    return BipartiteGraph(Vector{Int}(df[!, source_key]), Vector{Int}(df[!, target_key]))
+end
+
+function write_edgelist_parquet(path::String, sources::Vector{Int}, targets::Vector{Int})
+    dir = dirname(path)
+    if !isempty(dir) && !isdir(dir)
+        mkpath(dir)
+    end
+    df = DataFrame(source=sources, target=targets)
+    Parquet2.writefile(path, df)
+end
+
+function write_component_parquet(path::String, person_ids::Vector{Int}, component_ids::Vector{Int}, sizes::Vector{Int})
+    dir = dirname(path)
+    if !isempty(dir) && !isdir(dir)
+        mkpath(dir)
+    end
     df = DataFrame(person_id=person_ids, component_id=component_ids, component_size=sizes)
-    CSV.write(path, df)
+    Parquet2.writefile(path, df)
 end
 
 # --- Core Logic --- #
@@ -109,7 +126,7 @@ end
 const COMPONENT_SIZE_CUTOFF = 30
 
 # Read firm-manager edgelist from Stata output
-bipartite = read_edgelist("temp/edgelist.csv", "frame_id_numeric", "person_id")
+bipartite = read_edgelist_parquet("temp/edgelist.parquet", "frame_id_numeric", "person_id")
 println("Read ", length(bipartite.sources), " edges")
 
 # Project to manager-manager network and find large connected components
@@ -117,5 +134,5 @@ graph = project_bipartite_graph(bipartite)
 person_ids, component_ids, component_sizes = large_connected_components(graph, COMPONENT_SIZE_CUTOFF)
 println("Total managers in components with $(COMPONENT_SIZE_CUTOFF)+ nodes: ", length(person_ids))
 
-# Write manager person_ids and component_ids to CSV
-write_component_csv("temp/large_component_managers.csv", person_ids, component_ids, component_sizes)
+# Write manager person_ids and component_ids to Parquet
+write_component_parquet("temp/large_component_managers.parquet", person_ids, component_ids, component_sizes)

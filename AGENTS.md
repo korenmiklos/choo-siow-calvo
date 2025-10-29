@@ -280,7 +280,7 @@ The project uses a multi-stage data processing pipeline orchestrated by Make:
 
 **Stage 4: Network Analysis (Julia)**
 - `src/create/connected_component.jl`: Projects bipartite manager-firm graph to manager-manager network, identifies large connected components (≥30 nodes), outputs component membership
-- Output: `temp/large_component_managers.csv`
+- Output: `temp/large_component_managers.parquet`
 
 **Technology Stack**:
 - DuckDB 1.2+ for Stata file reading and SQL transformations
