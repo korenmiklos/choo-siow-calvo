@@ -1,0 +1,162 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+
+\title{Graph Analysis Methods for the Bipartite Assignment Network}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+We study a bipartite network connecting people to the firms that employ them. The analysis pipeline builds two projected graphs---a manager-to-manager projection ($A_{\mathrm{mm}}$) and a firm-to-firm projection ($A_{\mathrm{ff}}$)---and computes connectivity diagnostics that inform how information or shocks diffuse through the network. This document summarizes the methods both intuitively and formally.
+
+\section{Input Data and Incidence Matrix}
+\subsection{Intuition}
+Each observation in the edgelist identifies a worker-firm spell. If the same person appears at several firms we treat this as linking those firms through that worker. The goal is to turn this list into a matrix that remembers which people have ever interacted with which firms.
+
+\subsection{Technical Description}
+Let $P$ be the set of unique people and $F$ the set of unique firms in the edgelist. We construct a sparse Boolean incidence matrix $B \in \{0,1\}^{|P|\times|F|}$ with entries
+\[
+  B_{pf} =
+  \begin{cases}
+    1 & \text{if person } p \text{ is ever observed at firm } f, \\
+    0 & \text{otherwise.}
+  \end{cases}
+\]
+Multiple spells between the same $(p,f)$ pair collapse to a single entry. The matrix is stored as a sparse \textsc{CSC} structure to keep memory and computation manageable.
+
+\section{Graph Projections}
+\subsection{Intuition}
+Projecting the bipartite graph onto one side collapses the people--firm relationships into direct ties among peers. Two managers are linked if they have ever shared a firm. Two firms are linked if they have ever shared a manager. These derived graphs capture potential communication or spillover channels on each side.
+
+\subsection{Technical Description}
+The manager projection uses
+\[
+  A_{\mathrm{mm}} = \mathbf{1}\{ B B^{\top} > 0 \} - I,
+\]
+while the firm projection uses
+\[
+  A_{\mathrm{ff}} = \mathbf{1}\{ B^{\top} B > 0 \} - I.
+\]
+Here $\mathbf{1}\{\cdot\}$ denotes element-wise thresholding at zero and $I$ removes self loops. Both $A_{\mathrm{mm}}$ and $A_{\mathrm{ff}}$ are sparse Boolean adjacency matrices for simple, undirected graphs.
+
+\section{Connectivity Diagnostics}
+\subsection{Connected Components}
+\paragraph{Intuition.} A connected component contains nodes that can reach one another through a sequence of shared workers or firms. Singleton components correspond to managers or firms that are completely isolated in the projection.
+
+\paragraph{Technical.} We build a \texttt{SimpleGraph} from each adjacency matrix and run a breadth-first search to enumerate connected components. From the component sizes we derive:
+\begin{itemize}
+  \item the distribution of component sizes;
+  \item the share of nodes in the largest (``giant'') component, reported as \texttt{largest\_component\_share};
+  \item the top-$k$ component sizes for quick inspection.
+\end{itemize}
+The associated share equals the size of the largest component divided by the total number of nodes in the projection; values near one indicate a nearly connected graph, while small values signal heavy fragmentation.
+For visualization we plot histograms of component sizes and apply a top-code to keep the figure readable; by default all sizes greater than 50 are grouped into a single final bin, and this threshold can be overridden via the \texttt{COMPONENT\_HIST\_CAP} environment variable.
+
+\subsection{Irreducibility and Primitivity}
+\paragraph{Intuition.} A projection is \emph{irreducible} if the entire graph sits in one component. It is \emph{primitive} if, in addition, it is aperiodic (not bipartite), which matters for Perron--Frobenius style convergence.
+
+\paragraph{Technical.} Irreducibility reduces to connectivity of the undirected graph. Primitivity requires the graph to be both connected and non-bipartite. We test bipartiteness with a two-color breadth-first search. Failure indicates the presence of an odd cycle, implying primitivity.
+
+\subsection{Isolated Two-Hop Edge Share}
+\paragraph{Intuition.} An edge is ``isolated'' in this metric if it is not part of any 4-step walk (i.e., there is no alternate path connecting the same endpoints through two distinct intermediate nodes). High values mean many ties do not sit within denser clusters.
+
+\paragraph{Technical.} For each edge $(i,j)$ we search for a node $w$ that is adjacent to both $i$ and $j$ with $w \neq i,j$. Efficient marking arrays avoid quadratic blow-ups. The statistic reports the fraction of edges lacking such support.
+
+\section{Output Artefacts}
+\begin{itemize}
+  \item \texttt{component\_histogram\_A\_mm.png} and \texttt{component\_histogram\_A\_ff.png} display the capped component-size distributions for managers and firms, respectively.
+  \item Log entries report largest-component shares (\texttt{largest\_component\_share}), top-$k$ component sizes, low-support edge rates, and whether histogram capping occurred.
+  \item This document (\texttt{graph\_stats.tex}) records the methodology to aid reproducibility and interpretation.
+\end{itemize}
+
+\section{Quantitative Results}
+All figures below were produced by running
+\begin{verbatim}
+  julia network_learning.jl
+\end{verbatim}
+in the repository root on the current dataset (\texttt{edgelist.parquet}). Any environment variables mentioned are listed with the values in effect at runtime.
+
+\subsection{Incidence Overview}
+\begin{itemize}
+  \item People ($P$): $1{,}290{,}617$
+  \item Firms ($F$): $1{,}029{,}936$
+  \item Non-zero entries in $B$: $1{,}918{,}835$
+\end{itemize}
+These counts come directly from the \texttt{Parquet2} reader and the sparse matrix construction step. The number of non-zero entries equals the number of unique person--firm links after collapsing duplicates.
+
+\subsection{Projection Summaries}
+\begin{itemize}
+  \item Manager projection ($A_{\mathrm{mm}}$):
+    \begin{itemize}
+      \item Nodes: $1{,}290{,}617$
+      \item Edges: $2{,}319{,}052$
+      \item Maximum degree: $402$
+    \end{itemize}
+  \item Firm projection ($A_{\mathrm{ff}}$):
+    \begin{itemize}
+      \item Nodes: $1{,}029{,}936$
+      \item Edges: $2{,}079{,}150$
+      \item Maximum degree: $371$
+    \end{itemize}
+\end{itemize}
+Edge counts are obtained from the adjacency matrices by halving the number of stored non-zeros (each undirected edge contributes twice). Degree statistics are computed by summing adjacency rows.
+The maximum degree therefore records how many distinct neighbors the most connected node has in each projection, indicating the upper tail of the contact distribution.
+
+\subsection{Irreducibility and Primitivity Tests}
+\begin{itemize}
+  \item $A_{\mathrm{mm}}$: not irreducible, not primitive, not bipartite.
+  \item $A_{\mathrm{ff}}$: not irreducible, not primitive, not bipartite.
+\end{itemize}
+Both projections split into multiple connected components and contain odd cycles. The tests originate from graph-theoretic checks implemented in \texttt{Graphs.jl}.
+
+\subsection{Connected Component Statistics}
+\begin{itemize}
+  \item Total components: $511{,}246$ (identical across projections because the two projections share the same bipartite structure).
+  \item Largest-component share (\texttt{largest\_component\_share}):
+    \begin{itemize}
+      \item $A_{\mathrm{mm}}$: $0.2926$ (largest component size $377{,}573$).
+      \item $A_{\mathrm{ff}}$: $0.3274$ (largest component size $337{,}218$).
+    \end{itemize}
+  \item Top-10 component sizes:
+    \begin{itemize}
+      \item $A_{\mathrm{mm}}$: $377{,}573, \ldots$ (full vector stored in logs).
+      \item $A_{\mathrm{ff}}$: $337{,}218, \ldots$
+    \end{itemize}
+  \item Small-component histogram (size $\le 10$):
+    \begin{itemize}
+      \item $A_{\mathrm{mm}}$: sizes 1--10 occur $(302{,}688, 123{,}776, 44{,}587, 18{,}411, 7{,}751, 3{,}744, 2{,}214, 1{,}708, 1{,}086, 720)$ times respectively.
+      \item $A_{\mathrm{ff}}$: sizes 1--10 occur $(418{,}235, 56{,}988, 18{,}015, 7{,}652, 3{,}613, 1{,}907, 1{,}112, 829, 557, 385)$ times respectively.
+    \end{itemize}
+\end{itemize}
+These statistics come from the \texttt{component\_stats} helper, which records the sizes of all connected components, sorts them for top-$k$ reporting, and tallies low-size bins for logging.
+
+\subsection{Component Size Histograms}
+Plots are saved as
+\begin{itemize}
+  \item \texttt{component\_histogram\_A\_mm.png}
+  \item \texttt{component\_histogram\_A\_ff.png}
+\end{itemize}
+The histograms use unit-width bins starting at size 1. Because large components dominate the right tail, we apply a top-code at size $\ge 50$---the default value of \texttt{DEFAULT\_COMPONENT\_HIST\_CAP}. At runtime this threshold can be overridden by setting \texttt{COMPONENT\_HIST\_CAP}. For the current run the cap remained at $50$, grouping $6$ manager components and $4$ firm components into the final bin. The plotting routine logs the number of truncated components and annotates axes accordingly.
+
+\subsection{Isolated Two-Hop Edge Shares}
+\begin{itemize}
+  \item $A_{\mathrm{mm}}$: $0.1585$
+  \item $A_{\mathrm{ff}}$: $0.0985$
+\end{itemize}
+The two-hop routine iterates over edges in the \texttt{SimpleGraph} representation. For each edge $(i,j)$ it marks neighbors of the lower-degree endpoint and tests whether the opposite endpoint connects to any of those markers. The share reported is the fraction of edges without a supporting two-hop alternative. These values quantify how many links sit outside triangles or accordion-shaped motifs.
+
+\subsection{Runtime Environment}
+\begin{itemize}
+  \item Julia version: retrieved from \texttt{Base.VERSION} (not logged, but assumed from the execution environment).
+  \item Environment variables: no overrides were set (\texttt{COMPONENT\_HIST\_CAP} unset, \texttt{COMPONENT\_HIST\_CAP\_DEFAULT} at $50$).
+  \item Command: \texttt{julia network\_learning.jl}
+\end{itemize}
+To reproduce the results, ensure the edgelist file matches the dataset used here and run the command above. The script emits the quantitative diagnostics to the standard log (visible in the CLI) and regenerates the histogram PNG files in the working directory.
+
+\end{document}
